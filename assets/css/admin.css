@@ -52,6 +52,25 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
+.sidebar-brand .crest {
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-brand .crest:has(img) {
+  border-radius: 50%;
+}
+
+.sidebar-brand .crest img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--white);
+  padding: 2px;
+}
+
 .sidebar-brand .st {
   min-width: 0;
   line-height: 1.3;

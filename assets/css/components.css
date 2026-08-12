@@ -1090,6 +1090,28 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
+/* The real college logo sits on top of the "SEA" lettermark. If
+   assets/img/logo.png is missing the <img> removes itself on error and the
+   lettermark shows through, so the pages never render a broken image. */
+.crest {
+  position: relative;
+  overflow: hidden;
+}
+
+.crest:has(img) {
+  border-radius: 50%;
+}
+
+.crest img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--white);
+  padding: 2px;
+}
+
 .brand-text {
   display: flex;
   flex-direction: column;

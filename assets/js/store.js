@@ -33,7 +33,7 @@ window.Store = (function () {
      older dataset re-seeds itself on the next load instead of quietly showing
      stale records — which would otherwise only be fixable by clicking
      "Reset demo data". */
-  const SEED_VERSION = 2;
+  const SEED_VERSION = 3;
 
   /* Simulated round-trip time so loading states are visible during the demo.
      Set both to 0 to make the prototype instant. */
