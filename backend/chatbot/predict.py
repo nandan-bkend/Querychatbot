@@ -70,6 +70,12 @@ def load_model(force=False):
     return _model
 
 
+def reload_model():
+    """Drop the cached model so the next question uses the newly trained one."""
+    global _model
+    _model = None
+
+
 def small_talk(text):
     """Handle greetings before the classifier is consulted."""
     words = [w for w in str(text).lower().replace("?", " ").split() if w.isalpha()]

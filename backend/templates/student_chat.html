@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}" />
+<title>Enquiry Chatbot — Student Dashboard</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}" />
+</head>
+<body>
+
+<div class="chat-page">
+
+  <!-- =========================================================== HEADER -->
+  <header class="chat-header">
+    <a class="brand" href="{{ url_for('home') }}">
+      <span class="crest"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="" onerror="this.remove()" />SEA</span>
+      <span class="brand-text">
+        <span class="brand-name">College Enquiry Chatbot</span>
+        <span class="brand-sub">SEA College of Engineering and Technology</span>
+      </span>
+    </a>
+
+    <div class="chat-user">
+      <div class="who">
+        <span class="n">{{ user.name }}</span>
+        <span class="m">{{ user.usn }} · {{ user.semester }}</span>
+      </div>
+      <span class="avatar">{{ user.name | initials }}</span>
+      <a class="btn btn-on-dark btn-sm" href="{{ url_for('student_logout') }}">
+        <span data-icon="logout"></span>
+        <span class="btn-label">Logout</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ============================================================= CHAT -->
+  <main class="chat-main">
+
+    <div class="chat-scroll" id="chatScroll">
+      <!-- Empty state / welcome, removed after the first question -->
+      <div class="chat-welcome" id="chatWelcome">
+        <div class="mark"><span data-icon="bot"></span></div>
+        <h2>Namaskara {{ user.name.split()[0] }}</h2>
+        <p>
+          Ask me anything about the departments, faculty, class timings,
+          facilities or contact details of the college.
+        </p>
+      </div>
+
+      <div class="chat-thread" id="chatThread"
+           role="log" aria-live="polite" aria-label="Conversation"></div>
+    </div>
+
+    <div class="chat-composer-wrap">
+      <div class="chat-suggest" id="chatSuggest">
+        <div class="label">Try asking</div>
+        <div class="chip-row" id="chipRow">
+          {% for question in suggestions %}
+          <button class="chip" type="button" data-question="{{ question }}">{{ question }}</button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <form class="chat-composer" id="chatForm">
+        <label class="visually-hidden" for="chatInput">Type your question</label>
+        <textarea id="chatInput" rows="1"
+                  placeholder="Ask a question about the college…"
+                  autocomplete="off"></textarea>
+        <button class="send-btn" type="submit" id="sendBtn" disabled
+                aria-label="Send question">
+          <span data-icon="send"></span>
+        </button>
+      </form>
+
+      <div class="composer-hint">
+        <span><kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line</span>
+        <span class="hint-right">{{ knowledge_size }} questions in the knowledge base</span>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/server-chat.js') }}"></script>
+</body>
+</html>

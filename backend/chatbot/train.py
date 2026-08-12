@@ -96,6 +96,19 @@ def build_phrase_index(questions, training_rows):
     return documents, question_ids
 
 
+def retrain(verbose=False):
+    """
+    Rebuild and save the model. Called by main() for the command line, and by
+    the admin routes whenever a question is added, edited or deleted, so the
+    chatbot can answer a new question the moment it is saved. Takes well under
+    a second on a dataset this size, which is why it is done inline rather
+    than as a background job.
+    """
+    training_rows = load_training_rows()
+    questions = load_questions()
+    return _build(training_rows, questions, verbose=verbose)
+
+
 def main():
     try:
         training_rows = load_training_rows()
@@ -103,8 +116,16 @@ def main():
     except DatabaseError as err:
         sys.exit(f"Database error: {err}")
 
-    print(f"Training on {len(training_rows)} phrasings "
-          f"across {len(questions)} questions\n")
+    _build(training_rows, questions, verbose=True)
+
+
+def _build(training_rows, questions, verbose=False):
+    def say(*args):
+        if verbose:
+            print(*args)
+
+    say(f"Training on {len(training_rows)} phrasings "
+        f"across {len(questions)} questions\n")
 
     # ---------------------------------------------------------------- TF-IDF
     corpus = [preprocess(r["phrasing"]) for r in training_rows]
@@ -119,7 +140,7 @@ def main():
         min_df=1,             # tiny corpus, keep every term
     )
     X = vectorizer.fit_transform(corpus)
-    print(f"TF-IDF matrix: {X.shape[0]} documents x {X.shape[1]} features")
+    say(f"TF-IDF matrix: {X.shape[0]} documents x {X.shape[1]} features")
 
     # ----------------------------------------------------------- Naive Bayes
     classifier = MultinomialNB(alpha=0.1)
@@ -132,25 +153,27 @@ def main():
     #  2. Unseen question — a question the admin has added with no phrasings
     #     written for it yet. Harder, and the number to quote if asked about
     #     how the system copes with growth.
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    scores = cross_val_score(classifier, X, labels, cv=cv)
-    print(f"Naive Bayes accuracy: {scores.mean():.1%} "
-          f"(+/- {scores.std():.1%}) on unseen phrasings, 5-fold")
+    # Cross validation is only used for the printed report, so it is skipped
+    # on the inline retrains triggered by the admin panel.
+    if verbose:
+        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        scores = cross_val_score(classifier, X, labels, cv=cv)
+        say(f"Naive Bayes accuracy: {scores.mean():.1%} "
+            f"(+/- {scores.std():.1%}) on unseen phrasings, 5-fold")
 
-    groups = [r["question_id"] for r in training_rows]
-    n_groups = len(set(groups))
-    if n_groups >= 5:
-        gscores = cross_val_score(
-            classifier, X, labels, cv=GroupKFold(n_splits=5), groups=groups
-        )
-        print(f"                      {gscores.mean():.1%} "
-              f"(+/- {gscores.std():.1%}) on entirely unseen questions")
+        groups = [r["question_id"] for r in training_rows]
+        if len(set(groups)) >= 5:
+            gscores = cross_val_score(
+                classifier, X, labels, cv=GroupKFold(n_splits=5), groups=groups
+            )
+            say(f"                      {gscores.mean():.1%} "
+                f"(+/- {gscores.std():.1%}) on entirely unseen questions")
 
     # ------------------------------------------------ per-phrasing index
     phrase_docs, phrase_question_ids = build_phrase_index(questions, training_rows)
     phrase_matrix = vectorizer.transform(phrase_docs)
-    print(f"Similarity index: {phrase_matrix.shape[0]} phrasings "
-          f"covering {len(set(phrase_question_ids))} questions")
+    say(f"Similarity index: {phrase_matrix.shape[0]} phrasings "
+        f"covering {len(set(phrase_question_ids))} questions")
 
     # ------------------------------------------------------------- save
     Config.MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -175,7 +198,8 @@ def main():
         MODEL_FILE,
     )
     size_kb = MODEL_FILE.stat().st_size / 1024
-    print(f"\nSaved {MODEL_FILE.relative_to(Config.BASE_DIR)} ({size_kb:.0f} KB)")
+    say(f"\nSaved {MODEL_FILE.relative_to(Config.BASE_DIR)} ({size_kb:.0f} KB)")
+    return MODEL_FILE
 
 
 if __name__ == "__main__":

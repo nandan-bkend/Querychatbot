@@ -1,0 +1,153 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block subheading %}Overview of the chatbot knowledge base{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================== KPIs -->
+<section class="kpi-grid" aria-label="Summary statistics">
+  <div class="kpi">
+    <div class="kpi-head">
+      <span class="kpi-label">Total Questions</span>
+      <span class="kpi-icon"><span data-icon="helpCircle"></span></span>
+    </div>
+    <div class="kpi-value">{{ stats.total_questions }}</div>
+    <div class="kpi-sub">{{ stats.active_questions }} active in the chatbot</div>
+  </div>
+
+  <div class="kpi tone-green">
+    <div class="kpi-head">
+      <span class="kpi-label">Total Answers</span>
+      <span class="kpi-icon"><span data-icon="messageSquare"></span></span>
+    </div>
+    <div class="kpi-value">{{ stats.total_answers }}</div>
+    <div class="kpi-sub">across {{ stats.total_categories }} categories</div>
+  </div>
+
+  <div class="kpi tone-gold">
+    <div class="kpi-head">
+      <span class="kpi-label">Total Faculty</span>
+      <span class="kpi-icon"><span data-icon="users"></span></span>
+    </div>
+    <div class="kpi-value">{{ stats.total_faculty }}</div>
+    <div class="kpi-sub">{{ stats.active_faculty }} currently active</div>
+  </div>
+
+  <div class="kpi tone-violet">
+    <div class="kpi-head">
+      <span class="kpi-label">Recently Updated</span>
+      <span class="kpi-icon"><span data-icon="refresh"></span></span>
+    </div>
+    <div class="kpi-value">{{ stats.recently_updated }}</div>
+    <div class="kpi-sub">records in the last 30 days</div>
+  </div>
+</section>
+
+<!-- ============================================================ PANELS -->
+<div class="panel-grid">
+
+  <section class="card">
+    <div class="card-head">
+      <h2 class="card-title">Recently added questions</h2>
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin_questions') }}">
+        View all <span data-icon="arrowRight"></span>
+      </a>
+    </div>
+    <div class="card-body is-flush">
+      <div class="mini-list">
+        {% for q in recent_questions %}
+        <div class="mini-item">
+          <div class="mi-body">
+            <div class="mi-title">{{ q.question }}</div>
+            <div class="mi-meta">
+              <span class="pill">{{ q.category }}</span>
+              <span>Added {{ q.created_at | nice_date }}</span>
+            </div>
+          </div>
+          <span class="badge badge-{{ 'active' if q.status == 'Active' else 'inactive' }}">
+            {{ q.status }}
+          </span>
+        </div>
+        {% else %}
+        <div class="empty">
+          <div class="empty-icon"><span data-icon="inbox"></span></div>
+          <h4>No questions yet</h4>
+          <p>Add the first question so the chatbot has something to reply with.</p>
+          <a class="btn btn-primary btn-sm" href="{{ url_for('admin_questions') }}">
+            <span data-icon="plus"></span> Add question
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2 class="card-title">Recent activity</h2>
+    </div>
+    <div class="card-body is-flush">
+      <div class="timeline">
+        {% for a in activity %}
+        <div class="tl-item">
+          <span class="tl-dot act-{{ a.action }}">
+            <span data-icon="{{ 'plus' if a.action == 'added' else ('trash' if a.action == 'deleted' else 'edit') }}"></span>
+          </span>
+          <div class="tl-body">
+            <div class="tl-text">
+              <b>{{ a.actor_name }}</b> {{ a.action }} a
+              {{ 'faculty record' if a.entity == 'faculty' else 'question' }}
+              — {{ a.label }}
+            </div>
+            <div class="tl-time">{{ a.timestamp | nice_datetime }}</div>
+          </div>
+        </div>
+        {% else %}
+        <div class="empty" style="padding:var(--sp-10) var(--sp-4)">
+          <div class="empty-icon"><span data-icon="clock"></span></div>
+          <h4>No activity yet</h4>
+          <p>Changes made in the admin panel will be listed here.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-head">
+    <h2 class="card-title">Recently updated faculty information</h2>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin_faculty') }}">
+      View all <span data-icon="arrowRight"></span>
+    </a>
+  </div>
+  <div class="card-body is-flush">
+    <div class="mini-list">
+      {% for f in recent_faculty %}
+      <div class="mini-item">
+        <span class="avatar">{{ f.name | initials }}</span>
+        <div class="mi-body">
+          <div class="mi-title">{{ f.name }}</div>
+          <div class="mi-meta">
+            <span>{{ f.designation }}</span><span>·</span><span>{{ f.department }}</span>
+          </div>
+        </div>
+        <span class="text-sm text-muted">{{ f.updated_at | nice_date }}</span>
+      </div>
+      {% else %}
+      <div class="empty">
+        <div class="empty-icon"><span data-icon="users"></span></div>
+        <h4>No faculty records</h4>
+        <p>Add faculty so the chatbot can answer questions about the departments.</p>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('admin_faculty') }}">
+          <span data-icon="plus"></span> Add faculty
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

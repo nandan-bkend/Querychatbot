@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}" />
+<title>{% block title %}Admin Panel{% endblock %} — College Enquiry Chatbot</title>
+<meta name="robots" content="noindex" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+</head>
+<body data-page="{{ page }}">
+
+<div class="admin-scrim" id="adminScrim"></div>
+
+<div class="admin">
+
+  <!-- ========================================================== SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <span class="crest">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="" onerror="this.remove()" />SEA
+      </span>
+      <div class="st">
+        <b>Enquiry Chatbot</b>
+        <span>Admin Panel</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Admin sections">
+      <div class="sidebar-section">Management</div>
+      <a href="{{ url_for('admin_dashboard') }}" data-nav="dashboard">
+        <span data-icon="grid"></span> Dashboard
+      </a>
+      <a href="{{ url_for('admin_questions') }}" data-nav="questions">
+        <span data-icon="messageSquare"></span> Questions &amp; Answers
+      </a>
+      <a href="{{ url_for('admin_faculty') }}" data-nav="faculty">
+        <span data-icon="users"></span> Faculty Details
+      </a>
+
+      <div class="sidebar-section">Session</div>
+      <a href="{{ url_for('admin_logout') }}" class="is-danger">
+        <span data-icon="logout"></span> Logout
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <p class="sidebar-note">
+        Connected to the MySQL database. Changes made here take effect in the
+        student chatbot immediately.
+      </p>
+    </div>
+  </aside>
+
+  <!-- ========================================================== CONTENT -->
+  <div class="admin-content">
+
+    <header class="admin-topbar">
+      <button class="sidebar-toggle" type="button" id="sidebarToggle"
+              aria-label="Toggle navigation" aria-expanded="false">
+        <span data-icon="menu"></span>
+      </button>
+
+      <div class="topbar-title">
+        <h1>{% block heading %}{% endblock %}</h1>
+        <p>{% block subheading %}{% endblock %}</p>
+      </div>
+
+      <div class="topbar-right">
+        <span class="admin-chip"><span data-icon="shield"></span> Administrator</span>
+
+        <div class="dropdown">
+          <button class="profile-btn" type="button" data-dropdown
+                  aria-haspopup="true" aria-expanded="false">
+            <span class="avatar">{{ user.name | initials }}</span>
+            <span class="pname">{{ user.name }}</span>
+            <span data-icon="chevronDown"></span>
+          </button>
+
+          <div class="dropdown-menu">
+            <div class="dropdown-header">
+              <div class="name">{{ user.name }}</div>
+              <div class="email">{{ user.email }}</div>
+            </div>
+            <a class="dropdown-item" href="{{ url_for('home') }}">
+              <span data-icon="building"></span> View college homepage
+            </a>
+            <a class="dropdown-item is-danger" href="{{ url_for('admin_logout') }}">
+              <span data-icon="logout"></span> Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-body">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+{% block modals %}{% endblock %}
+
+<!-- Flash messages are handed to the toast system by server-admin.js -->
+<script type="application/json" id="flashData">
+  {{ get_flashed_messages(with_categories=true) | tojson }}
+</script>
+
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/server-admin.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

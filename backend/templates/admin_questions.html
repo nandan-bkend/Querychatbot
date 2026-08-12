@@ -1,0 +1,221 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Questions &amp; Answers{% endblock %}
+{% block heading %}Questions &amp; Answers{% endblock %}
+{% block subheading %}Everything the chatbot is able to answer{% endblock %}
+
+{% macro sort_link(key, label) %}
+  {%- set next_dir = 'asc' if sort != key or direction == 'desc' else 'desc' -%}
+  <a href="{{ url_for('admin_questions', search=search, category=category,
+                      status=status, sort=key, dir=next_dir) }}"
+     style="color:inherit">
+    {{ label }}
+    {%- if sort == key %} <span class="sort-ind" style="opacity:1;color:var(--navy-500)">{{ '↑' if direction == 'asc' else '↓' }}</span>{% endif -%}
+  </a>
+{% endmacro %}
+
+{% block content %}
+<section class="card">
+  <div class="card-head">
+    <h2 class="card-title">Question bank</h2>
+    <button class="btn btn-primary btn-sm" type="button" data-add>
+      <span data-icon="plus"></span> Add Question
+    </button>
+  </div>
+
+  <!-- ---------------------------------------------- search + filters -->
+  <form class="toolbar" id="filterForm" method="get"
+        action="{{ url_for('admin_questions') }}">
+    <div class="search input-group">
+      <span data-icon="search"></span>
+      <label class="visually-hidden" for="searchInput">Search questions</label>
+      <input class="input" type="search" id="searchInput" name="search"
+             value="{{ search }}"
+             placeholder="Search a question, answer or category…" />
+    </div>
+
+    <label class="visually-hidden" for="categoryFilter">Filter by category</label>
+    <select class="select" id="categoryFilter" name="category">
+      <option value="all">All categories</option>
+      {% for c in categories %}
+      <option value="{{ c.name }}" {% if category == c.name %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="visually-hidden" for="statusFilter">Filter by status</label>
+    <select class="select" id="statusFilter" name="status">
+      <option value="all">All statuses</option>
+      <option value="Active" {% if status == 'Active' %}selected{% endif %}>Active</option>
+      <option value="Inactive" {% if status == 'Inactive' %}selected{% endif %}>Inactive</option>
+    </select>
+
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('admin_questions') }}">Clear</a>
+  </form>
+
+  <!-- -------------------------------------------------------- table -->
+  <div class="card-body is-flush">
+    {% if questions %}
+    <div class="table-wrap">
+      <table class="table table-stack">
+        <thead>
+          <tr>
+            <th class="th-sort">{{ sort_link('question', 'Question') }}</th>
+            <th>Answer</th>
+            <th class="th-sort">{{ sort_link('category', 'Category') }}</th>
+            <th class="th-sort">{{ sort_link('created_at', 'Date Added') }}</th>
+            <th>Status</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in questions %}
+          <tr>
+            <td data-label="Question" class="q-cell">
+              <div class="qt">{{ q.question }}</div>
+              <div class="qid">{{ q.code }}</div>
+            </td>
+            <td data-label="Answer" class="a-cell">
+              <div class="clamp-2">{{ q.answer }}</div>
+            </td>
+            <td data-label="Category"><span class="pill">{{ q.category }}</span></td>
+            <td data-label="Date Added" class="text-sm nowrap">{{ q.created_at | nice_date }}</td>
+            <td data-label="Status">
+              <span class="badge badge-{{ 'active' if q.status == 'Active' else 'inactive' }}">{{ q.status }}</span>
+            </td>
+            <td class="col-actions">
+              <div class="row-actions">
+                <button class="btn-icon" type="button" title="Edit"
+                        aria-label="Edit question"
+                        data-edit
+                        data-action="{{ url_for('admin_questions_edit', question_id=q.id) }}"
+                        data-subtitle="Editing {{ q.code }} — changes apply to the chatbot immediately."
+                        data-field-question="{{ q.question }}"
+                        data-field-answer="{{ q.answer }}"
+                        data-field-category_id="{{ q.category_id }}"
+                        data-field-status="{{ q.status }}">
+                  <span data-icon="edit"></span>
+                </button>
+
+                <button class="btn-icon is-danger" type="button" title="Delete"
+                        aria-label="Delete question"
+                        data-delete-form="delete-q-{{ q.id }}"
+                        data-confirm-title="Delete this question?"
+                        data-confirm-message="&quot;{{ q.question }}&quot; will be permanently removed and the chatbot will no longer be able to answer it."
+                        data-confirm-label="Delete question">
+                  <span data-icon="trash"></span>
+                </button>
+
+                <form id="delete-q-{{ q.id }}" method="post" class="hidden"
+                      action="{{ url_for('admin_questions_delete', question_id=q.id) }}"></form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <div class="empty">
+      <div class="empty-icon">
+        <span data-icon="{{ 'search' if search or category != 'all' or status != 'all' else 'inbox' }}"></span>
+      </div>
+      {% if search or category != 'all' or status != 'all' %}
+        <h4>No matching questions</h4>
+        <p>Nothing matches the current search and filters. Try a different term or clear the filters.</p>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('admin_questions') }}">Clear filters</a>
+      {% else %}
+        <h4>The question bank is empty</h4>
+        <p>Add the first question and answer so the chatbot has something to reply with.</p>
+        <button class="btn btn-primary btn-sm" type="button" data-add>
+          <span data-icon="plus"></span> Add Question
+        </button>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="result-count">
+    Showing {{ questions | length }} question{{ '' if questions | length == 1 else 's' }}
+    {%- if search or category != 'all' or status != 'all' %} matching the current filters{% endif %}
+  </div>
+</section>
+{% endblock %}
+
+
+{% block modals %}
+<div class="modal-backdrop" id="questionModal" role="dialog" aria-modal="true"
+     aria-hidden="true"
+     data-record-modal
+     data-add-action="{{ url_for('admin_questions_add') }}"
+     data-add-title="Add Question"
+     data-add-sub="This question becomes answerable by the chatbot."
+     data-add-label="Save question"
+     data-edit-title="Edit Question">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div>
+        <h3 data-modal-title>Add Question</h3>
+        <p data-modal-sub>This question becomes answerable by the chatbot.</p>
+      </div>
+      <button class="btn-icon" type="button" data-close-modal aria-label="Close">
+        <span data-icon="close"></span>
+      </button>
+    </div>
+
+    <form method="post" action="{{ url_for('admin_questions_add') }}">
+      <div class="modal-body">
+        <div class="field">
+          <label class="field-label" for="questionText">Question<span class="req">*</span></label>
+          <textarea class="textarea" id="questionText" name="question" rows="2"
+                    style="min-height:64px"
+                    placeholder="e.g. Who is the HOD of the ISE department?"
+                    data-validate="required min:10 max:200"
+                    data-label="Question"></textarea>
+          <div class="field-error"></div>
+          <div class="field-hint">Write it the way a student would type it in the chat.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="answerText">Answer<span class="req">*</span></label>
+          <textarea class="textarea" id="answerText" name="answer" rows="5"
+                    placeholder="Write the complete answer the chatbot should reply with…"
+                    data-validate="required min:15 max:800"
+                    data-label="Answer"></textarea>
+          <div class="field-error"></div>
+          <div class="field-hint">Include names, room numbers and contact details wherever relevant.</div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label class="field-label" for="categorySelect">Category<span class="req">*</span></label>
+            <select class="select" id="categorySelect" name="category_id"
+                    data-validate="required" data-label="Category">
+              {% for c in categories %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
+            <div class="field-error"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="statusSelect">Status<span class="req">*</span></label>
+            <select class="select" id="statusSelect" name="status"
+                    data-validate="required" data-label="Status">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+            <div class="field-error"></div>
+            <div class="field-hint">Inactive questions are hidden from the chatbot.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-outline" type="button" data-close-modal>Cancel</button>
+        <button class="btn btn-primary" type="submit" data-save>Save question</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

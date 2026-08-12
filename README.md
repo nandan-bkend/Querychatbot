@@ -8,11 +8,19 @@ Students sign in and ask questions about departments, faculty, class timings,
 facilities and contact details. Administrators sign in to a separate panel to
 manage the questions, answers and faculty records the chatbot draws on.
 
-> **This repository is the frontend only.** There is no Python backend, no
-> MySQL database and no machine learning code here. Every screen runs on sample
-> data so the complete system can be demonstrated in a browser. See
-> [Connecting the backend](#connecting-the-backend) for exactly where the real
-> system plugs in.
+> **This folder is the frontend prototype.** It runs on sample data with no
+> server, so the complete interface can be demonstrated from a file.
+>
+> The working system — Flask, MySQL and the NLP + TF-IDF + Naive Bayes
+> pipeline — lives in [`backend/`](backend/README.md). Both are kept working:
+>
+> | Mode | How to run | Needs |
+> |---|---|---|
+> | Prototype | open `index.html` | nothing |
+> | Full system | `cd backend && python app.py` | Python, MySQL |
+>
+> Keep the prototype as a fallback for your review. If anything goes wrong with
+> the server on the day, the interface still runs from a file.
 
 ---
 
@@ -141,7 +149,7 @@ runs anywhere without setup.
 ## How the sample data works
 
 `assets/js/mock-data.js` holds the seed dataset: **28 questions** across six
-categories and **14 faculty members** across five departments.
+categories and **18 faculty members** across seven departments.
 
 On first load, `store.js` copies that seed into the browser's `localStorage`
 and works from the copy. That is why adding a question in the admin panel makes

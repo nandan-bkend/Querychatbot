@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}" />
+<title>Something went wrong — College Enquiry Chatbot</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}" />
+</head>
+<body style="display:grid;place-items:center;min-height:100vh;background:var(--slate-50)">
+
+<main class="card" style="max-width:560px;margin:var(--sp-6)">
+  <div class="card-body">
+    <div class="confirm-icon"><span data-icon="alertTriangle"></span></div>
+    <h1 style="font-family:var(--font-body);font-size:var(--fs-xl);margin-bottom:var(--sp-3)">
+      The application could not reach the database
+    </h1>
+    <p class="text-muted" style="line-height:var(--lh-normal);margin-bottom:var(--sp-5)">
+      {{ message }}
+    </p>
+
+    <div style="background:var(--slate-50);border:1px solid var(--line);
+                border-radius:var(--r-md);padding:var(--sp-4);
+                font-family:var(--font-mono);font-size:12px;line-height:1.8">
+      brew services start mysql<br />
+      mysql -u root -p &lt; backend/schema.sql<br />
+      python seed.py &amp;&amp; python seed_training.py<br />
+      python -m chatbot.train
+    </div>
+  </div>
+  <div class="modal-foot" style="border-radius:0 0 var(--r-lg) var(--r-lg)">
+    <a class="btn btn-primary" href="{{ url_for('home') }}">Back to Home</a>
+  </div>
+</main>
+
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+</body>
+</html>

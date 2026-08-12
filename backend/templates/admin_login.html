@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}" />
+<title>Administrator Login — College Enquiry Chatbot</title>
+<meta name="robots" content="noindex" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+</head>
+<body>
+
+<div class="auth-page is-admin">
+
+  <!-- ==================================================== BRAND PANEL -->
+  <aside class="auth-aside">
+    <a class="brand" href="{{ url_for('home') }}">
+      <span class="crest"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="" onerror="this.remove()" />SEA</span>
+      <span class="brand-text">
+        <span class="brand-name">SEA College</span>
+        <span class="brand-sub">Administration Console</span>
+      </span>
+    </a>
+
+    <div class="auth-aside-body">
+      <h2>Manage what the chatbot knows.</h2>
+      <p>
+        The administration console is where questions, answers and faculty
+        records are maintained. Every change made here is reflected in the
+        student chatbot immediately.
+      </p>
+
+      <div class="auth-points">
+        <div class="auth-point">
+          <span data-icon="checkCircle"></span>
+          <span>Add, edit and remove chatbot questions and answers</span>
+        </div>
+        <div class="auth-point">
+          <span data-icon="checkCircle"></span>
+          <span>Maintain department-wise faculty records</span>
+        </div>
+        <div class="auth-point">
+          <span data-icon="checkCircle"></span>
+          <span>Review recent administrative activity at a glance</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="auth-aside-foot">
+      Authorised personnel only · All administrative actions are logged
+    </p>
+  </aside>
+
+  <!-- ===================================================== FORM PANEL -->
+  <main class="auth-main">
+    <div class="auth-card">
+
+      <span class="auth-role">
+        <span data-icon="shield"></span>
+        Restricted Area
+      </span>
+
+      <div class="auth-head">
+        <h1>Administrator Login</h1>
+        <p>Sign in with your administrator credentials.</p>
+      </div>
+
+      <div class="restricted">
+        <span data-icon="alertTriangle"></span>
+        <div>
+          This section is for college administrators only. Students should use
+          the <a href="{{ url_for('student_login') }}">student login</a> instead.
+        </div>
+      </div>
+
+      <!-- Demo credentials — delete this block once the backend is connected -->
+      <div class="demo-hint">
+        <span data-icon="info"></span>
+        <div>
+          <strong>Demo login:</strong>
+          <code>admin@seacet.edu.in</code> / <code>admin123</code>
+        </div>
+      </div>
+
+      {% if error %}
+      <div class="form-alert is-shown" role="alert">
+        <span data-icon="alertCircle"></span>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <form id="loginForm" method="post" action="{{ url_for('admin_login') }}">
+
+        <div class="field">
+          <label class="field-label" for="email">
+            Administrator email<span class="req">*</span>
+          </label>
+          <div class="input-group">
+            <span data-icon="mail"></span>
+            <input class="input" type="email" id="email" name="email" value="{{ email }}"
+                   placeholder="admin@seacet.edu.in" autocomplete="username"
+                   data-validate="required email" data-label="Administrator email" />
+          </div>
+          <div class="field-error"></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="password">
+            Password<span class="req">*</span>
+          </label>
+          <div class="input-group">
+            <span data-icon="shield"></span>
+            <input class="input" type="password" id="password" name="password"
+                   placeholder="Enter your password" autocomplete="current-password"
+                   data-validate="required min:6" data-label="Password" />
+            <button class="pw-toggle" type="button" data-pw-toggle="password"
+                    aria-label="Show password">
+              <span data-icon="eye"></span>
+            </button>
+          </div>
+          <div class="field-error"></div>
+        </div>
+
+        <div class="auth-row">
+          <span class="text-sm text-muted">Session ends when the browser closes</span>
+          <a href="#" id="forgotLink" class="text-sm">Forgot password?</a>
+        </div>
+
+        <button class="btn btn-primary btn-lg btn-block" type="submit" id="submitBtn">
+          Sign in to Admin Panel
+        </button>
+      </form>
+
+      <div class="auth-foot">
+        <a href="{{ url_for('home') }}">
+          <span data-icon="chevronRight" style="transform:rotate(180deg)"></span>
+          Back to Home
+        </a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ================================================ FORGOT PASSWORD -->
+<div class="modal-backdrop" id="forgotModal" role="dialog" aria-modal="true"
+     aria-labelledby="forgotTitle" aria-hidden="true">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div>
+        <h3 id="forgotTitle">Administrator password reset</h3>
+        <p>Handled by the system administrator only.</p>
+      </div>
+      <button class="btn-icon" type="button" data-close-modal aria-label="Close">
+        <span data-icon="close"></span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted" style="line-height:var(--lh-normal)">
+        For security reasons administrator passwords cannot be reset from this
+        page. Please contact the Head of the Department of Information Science
+        &amp; Engineering, or raise a request with the college IT cell at
+        <strong>itsupport@seacet.edu.in</strong> from your official email address.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" type="button" data-close-modal>Got it</button>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/server-login.js') }}"></script>
+</body>
+</html>
