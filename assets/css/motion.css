@@ -1,0 +1,378 @@
+/* ==========================================================================
+   motion.css — micro-interactions
+   --------------------------------------------------------------------------
+   Everything here is polish layered on top of a working interface. Load it
+   last; remove it and the application still works exactly the same.
+
+   The guiding rule is restraint. An interface feels expensive when a handful
+   of things respond precisely — a button that gives under the finger, a row
+   that settles into place — not when everything moves at once.
+
+   Every effect below is disabled automatically for anyone who has asked their
+   system to reduce motion (see the media query in tokens.css).
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Buttons — press, lift, and a ripple from the point of contact
+   ========================================================================== */
+
+.btn,
+.btn-icon,
+.chip,
+.send-btn,
+.profile-btn,
+.dropdown-item,
+.segmented button {
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scale reads as "giving way under pressure"; a downward nudge alone reads as
+   the whole element sliding. 0.97 is enough to feel, small enough not to
+   distract. */
+.btn {
+  transition: background var(--t-base), border-color var(--t-base),
+    color var(--t-base), box-shadow var(--t-base),
+    transform var(--t-press);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 60ms;
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-gold:hover:not(:disabled),
+.btn-danger:hover:not(:disabled) {
+  box-shadow: var(--sh-2);
+}
+
+.btn-icon {
+  transition: background var(--t-fast), color var(--t-fast),
+    transform var(--t-press);
+}
+.btn-icon:active {
+  transform: scale(0.88);
+}
+
+.send-btn {
+  transition: background var(--t-fast), color var(--t-fast),
+    transform var(--t-press);
+}
+.send-btn:not(:disabled):hover {
+  transform: scale(1.06);
+}
+.send-btn:not(:disabled):active {
+  transform: scale(0.92);
+}
+
+/* The send arrow leans into the direction of travel on hover */
+.send-btn:not(:disabled):hover svg {
+  transform: translateX(1px) translateY(-1px);
+  transition: transform var(--t-base);
+}
+
+/* ---- Ripple, injected by motion.js ---- */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  background: currentColor;
+  opacity: 0.28;
+  pointer-events: none;
+  animation: ripple 560ms var(--ease-expo) forwards;
+}
+
+.btn-primary .ripple,
+.btn-danger .ripple,
+.btn-on-dark .ripple {
+  background: #fff;
+  opacity: 0.32;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   2. Chips — tactile, and they acknowledge being chosen
+   ========================================================================== */
+
+.chip {
+  transition: background var(--t-base), border-color var(--t-base),
+    color var(--t-base), transform var(--t-press), box-shadow var(--t-base);
+}
+
+.chip:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-2);
+}
+
+.chip:active {
+  transform: scale(0.96);
+  transition-duration: 60ms;
+}
+
+/* ==========================================================================
+   3. Entrance — content settles in rather than appearing
+   ========================================================================== */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* motion.js adds data-rise and a per-item delay */
+[data-rise] {
+  animation: rise var(--t-enter) backwards;
+}
+
+/* The hero is the first thing seen, so it gets a slightly longer, calmer
+   entrance than the rest of the page. */
+.hero h1,
+.hero-lead,
+.hero-actions,
+.eyebrow,
+.hero-note {
+  animation: rise 700ms var(--ease-expo) backwards;
+}
+.eyebrow      { animation-delay: 40ms; }
+.hero h1      { animation-delay: 100ms; }
+.hero-lead    { animation-delay: 170ms; }
+.hero-actions { animation-delay: 240ms; }
+.hero-note    { animation-delay: 310ms; }
+
+.hero-preview {
+  animation: rise 900ms var(--ease-expo) 300ms backwards;
+}
+
+/* ==========================================================================
+   4. Cards and rows
+   ========================================================================== */
+
+.card {
+  transition: box-shadow var(--t-slow), border-color var(--t-slow);
+}
+
+.cat-card,
+.fac-card {
+  transition: border-color var(--t-slow), box-shadow var(--t-slow),
+    transform var(--t-slow);
+}
+
+.cat-card:hover,
+.fac-card:hover {
+  transform: translateY(-3px);
+}
+
+.kpi {
+  transition: box-shadow var(--t-slow), transform var(--t-slow);
+}
+.kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-2);
+}
+
+/* The accent bar on a KPI card grows to full height on hover */
+.kpi::after {
+  transform-origin: left;
+  transition: transform var(--t-slow);
+}
+.kpi:hover::after {
+  transform: scaleX(1.6);
+}
+
+.table tbody tr {
+  transition: background var(--t-fast), box-shadow var(--t-fast);
+}
+
+.mini-item,
+.tl-item {
+  transition: background var(--t-fast);
+}
+.mini-item:hover {
+  background: var(--slate-50);
+}
+
+/* ==========================================================================
+   5. Navigation
+   ========================================================================== */
+
+/* A line that draws itself under the active nav link */
+.nav-links a {
+  position: relative;
+}
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: var(--sp-3);
+  right: var(--sp-3);
+  bottom: 2px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--gold-500);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-slow);
+}
+
+.nav-links a:hover::after,
+.nav-links a.is-active::after {
+  transform: scaleX(1);
+}
+
+/* The gold marker on the active sidebar item slides rather than jumps */
+.sidebar-nav a::before {
+  transition: transform var(--t-slow), opacity var(--t-base);
+}
+
+.sidebar-nav a,
+.sidebar-nav button {
+  transition: background var(--t-fast), color var(--t-fast),
+    padding-left var(--t-base);
+}
+
+.sidebar-nav a:hover,
+.sidebar-nav button:hover {
+  padding-left: var(--sp-4);
+}
+
+/* ==========================================================================
+   6. Forms
+   ========================================================================== */
+
+.input,
+.select,
+.textarea {
+  transition: border-color var(--t-base), box-shadow var(--t-base),
+    background var(--t-base);
+}
+
+.checkbox input {
+  transition: background var(--t-fast), border-color var(--t-fast),
+    transform var(--t-press);
+}
+.checkbox:active input {
+  transform: scale(0.9);
+}
+
+/* An invalid field draws attention once, then stops */
+.field.is-invalid .input,
+.field.is-invalid .select,
+.field.is-invalid .textarea {
+  animation: nudge 400ms var(--ease);
+}
+
+@keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+.field-error {
+  animation: fade var(--t-base);
+}
+
+/* ==========================================================================
+   7. Chat
+   ========================================================================== */
+
+/* Bubbles arrive with a slight spring, which reads as a message landing */
+.msg {
+  animation: msg-in 420ms var(--ease-expo);
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.msg-user .bubble,
+.msg-bot .bubble {
+  transition: box-shadow var(--t-base);
+}
+
+.chat-welcome .mark {
+  animation: rise 700ms var(--ease-spring) backwards;
+}
+
+.chat-welcome h2 { animation: rise 600ms var(--ease-expo) 120ms backwards; }
+.chat-welcome p  { animation: rise 600ms var(--ease-expo) 190ms backwards; }
+
+/* ==========================================================================
+   8. Overlays
+   ========================================================================== */
+
+.modal {
+  transition: transform 320ms var(--ease-expo), opacity var(--t-base);
+}
+
+.modal-backdrop.is-open .modal {
+  transform: translateY(0) scale(1);
+}
+
+.modal-backdrop:not(.is-open) .modal {
+  transform: translateY(8px) scale(0.97);
+}
+
+.dropdown-menu {
+  transform-origin: top right;
+}
+
+.dropdown.is-open .dropdown-menu {
+  animation: menu-in 240ms var(--ease-expo);
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.toast {
+  animation: toast-in 420ms var(--ease-spring);
+}
+
+/* ==========================================================================
+   9. Page load
+   ========================================================================== */
+
+/* A short fade on load. Deliberately not paired with an "invisible until
+   JavaScript runs" class: if the script ever failed to load, the page would
+   stay blank, and a fade-in is not worth that risk. */
+body {
+  animation: fade 280ms var(--ease) backwards;
+}
