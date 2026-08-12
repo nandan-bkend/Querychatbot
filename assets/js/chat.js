@@ -394,7 +394,7 @@
     setTimeout(function () {
       addBotMessage(
         "Namaskara " + student.name.split(" ")[0] +
-          "! I am the Vidyaranya Institute enquiry assistant. Ask me about the " +
+          "! I am the SEA College enquiry assistant. Ask me about the " +
           "departments, faculty, class timings, campus facilities or contact " +
           "details of the college.",
         null

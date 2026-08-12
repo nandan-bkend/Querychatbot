@@ -13,8 +13,8 @@
 window.Auth = (function () {
   "use strict";
 
-  const SESSION_KEY = "viet.session";
-  const REMEMBER_KEY = "viet.remember";
+  const SESSION_KEY = "sea.session";
+  const REMEMBER_KEY = "sea.remember";
   const LATENCY = 620; // makes the button's loading state visible
 
   function readSession() {
@@ -77,9 +77,17 @@ window.Auth = (function () {
     return readSession();
   }
 
+  /* Resolve the profile from the current dataset rather than trusting the copy
+     taken at login, so edits to mock-data.js appear without signing out again.
+     The real backend behaves the same way: it returns the profile as it stands
+     now for the signed-in session, not a stale snapshot. */
+  function profileFor(role) {
+    return role === "admin" ? window.MOCK_DATA.admin : window.MOCK_DATA.student;
+  }
+
   function user() {
     const s = readSession();
-    return s ? s.user : null;
+    return s ? profileFor(s.role) : null;
   }
 
   function logout(redirectTo) {
@@ -95,7 +103,7 @@ window.Auth = (function () {
       window.location.replace(loginPage);
       return null;
     }
-    return s.user;
+    return profileFor(role);
   }
 
   function requireStudent() {

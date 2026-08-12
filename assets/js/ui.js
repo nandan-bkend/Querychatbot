@@ -378,7 +378,7 @@ window.UI = (function () {
       if (!value) continue; // remaining rules only apply to filled fields
 
       if (name === "email" && !EMAIL_RE.test(value)) {
-        setError(input, "Enter a valid email address, e.g. name@viet.edu.in");
+        setError(input, "Enter a valid email address, e.g. name@seacet.edu.in");
         return false;
       }
       if (name === "phone" && !PHONE_RE.test(value)) {

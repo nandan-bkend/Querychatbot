@@ -23,11 +23,17 @@ window.Store = (function () {
   "use strict";
 
   const KEYS = {
-    questions: "viet.questions",
-    faculty: "viet.faculty",
-    activity: "viet.activity",
-    seeded: "viet.seeded",
+    questions: "sea.questions",
+    faculty: "sea.faculty",
+    activity: "sea.activity",
+    seeded: "sea.seeded",
   };
+
+  /* Bump this whenever mock-data.js changes. A browser that already seeded an
+     older dataset re-seeds itself on the next load instead of quietly showing
+     stale records — which would otherwise only be fixable by clicking
+     "Reset demo data". */
+  const SEED_VERSION = 2;
 
   /* Simulated round-trip time so loading states are visible during the demo.
      Set both to 0 to make the prototype instant. */
@@ -48,7 +54,7 @@ window.Store = (function () {
 
   (function detectStorage() {
     try {
-      const probe = "viet.probe";
+      const probe = "sea.probe";
       localStorage.setItem(probe, "1");
       localStorage.removeItem(probe);
     } catch (err) {
@@ -111,15 +117,33 @@ window.Store = (function () {
       console.error("[Store] mock-data.js must be loaded before store.js");
       return;
     }
-    if (force || !read(KEYS.seeded, null)) {
+    if (force || read(KEYS.seeded, 0) !== SEED_VERSION) {
       write(KEYS.questions, clone(window.MOCK_DATA.questions));
       write(KEYS.faculty, clone(window.MOCK_DATA.faculty));
       write(KEYS.activity, clone(window.MOCK_DATA.activity));
-      write(KEYS.seeded, 1);
+      write(KEYS.seeded, SEED_VERSION);
+    }
+  }
+
+  /* Clear keys left behind by an earlier build so nothing orphaned shows up
+     in the browser's storage inspector. */
+  function dropLegacyKeys() {
+    if (usingMemory) return;
+    try {
+      Object.keys(localStorage)
+        .filter(function (key) {
+          return key.indexOf("viet.") === 0;
+        })
+        .forEach(function (key) {
+          localStorage.removeItem(key);
+        });
+    } catch (err) {
+      /* nothing to clean up */
     }
   }
 
   function init() {
+    dropLegacyKeys();
     seed(false);
   }
 

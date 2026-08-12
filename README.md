@@ -1,7 +1,7 @@
 # College Enquiry Chatbot with Admin Panel — Frontend
 
-A frontend prototype of a college enquiry chatbot for **Vidyaranya Institute of
-Engineering & Technology (VIET)**, built for the Department of Information
+A frontend prototype of a college enquiry chatbot for **SEA College of
+Engineering & Technology (SEA)**, built for the Department of Information
 Science & Engineering.
 
 Students sign in and ask questions about departments, faculty, class timings,
@@ -44,8 +44,8 @@ Then open <http://localhost:8000>.
 
 | Role | Email | Password |
 |---|---|---|
-| Student | `student@viet.edu.in` | `student123` |
-| Administrator | `admin@viet.edu.in` | `admin123` |
+| Student | `student@seacet.edu.in` | `student123` |
+| Administrator | `admin@seacet.edu.in` | `admin123` |
 
 Both are printed on their login pages so nothing has to be memorised during a
 demonstration.
@@ -249,4 +249,4 @@ laptop without cloning.
 ---
 
 *Frontend prototype · Department of Information Science & Engineering ·
-Vidyaranya Institute of Engineering & Technology*
+SEA College of Engineering and Technology*
