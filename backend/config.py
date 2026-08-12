@@ -23,6 +23,9 @@ class Config:
     # ---- Flask ----
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-me")
     DEBUG = os.getenv("FLASK_DEBUG", "1") == "1"
+    # Not 5000: macOS runs AirPlay Receiver on that port, which answers with
+    # 403 and makes it look as though the application failed to start.
+    PORT = int(os.getenv("PORT", "8000"))
 
     # ---- MySQL ----
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")

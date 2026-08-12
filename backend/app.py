@@ -1,7 +1,7 @@
 """
 app.py — College Enquiry Chatbot, Flask application
 
-    python app.py           then open http://127.0.0.1:5000
+    python app.py           then open http://127.0.0.1:8000
 
 Route map
 ---------
@@ -417,5 +417,5 @@ if __name__ == "__main__":
     except FileNotFoundError as err:
         raise SystemExit(f"\n{err}\n")
 
-    print("  serving  : http://127.0.0.1:5000\n")
-    app.run(debug=Config.DEBUG, port=5000)
+    print(f"  serving  : http://127.0.0.1:{Config.PORT}\n")
+    app.run(debug=Config.DEBUG, port=Config.PORT)
