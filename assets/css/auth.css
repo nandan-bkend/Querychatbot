@@ -1,0 +1,249 @@
+/* ==========================================================================
+   auth.css — Login page layout
+   Shared by the student and the admin login pages. The admin page layers its
+   own overrides on top (see admin.css) so the two are never confused.
+   ========================================================================== */
+
+/* ==========================================================================
+   Split layout
+   ========================================================================== */
+
+.auth-page {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  min-height: 100vh;
+}
+
+/* ---- Left brand panel ---- */
+.auth-aside {
+  position: relative;
+  background: var(--navy-900);
+  color: var(--white);
+  padding: var(--sp-10) var(--sp-12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.auth-aside::before {
+  content: "";
+  position: absolute;
+  bottom: -180px;
+  left: -120px;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(201, 162, 39, 0.15) 0%,
+    rgba(201, 162, 39, 0) 70%
+  );
+}
+
+.auth-aside > * {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-aside-body {
+  margin-top: auto;
+  margin-bottom: auto;
+  padding-block: var(--sp-10);
+  max-width: 420px;
+}
+
+.auth-aside-body h2 {
+  font-size: var(--fs-3xl);
+  color: var(--white);
+  margin-bottom: var(--sp-4);
+}
+
+.auth-aside-body > p {
+  color: var(--navy-200);
+  font-size: var(--fs-md);
+  line-height: var(--lh-normal);
+}
+
+.auth-points {
+  margin-top: var(--sp-8);
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.auth-point {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  font-size: var(--fs-base);
+  color: #d7e2ef;
+}
+
+.auth-point svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--gold-400);
+}
+
+.auth-aside-foot {
+  font-size: var(--fs-sm);
+  color: var(--navy-200);
+  opacity: 0.8;
+}
+
+/* ---- Right form panel ---- */
+.auth-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--sp-10) var(--sp-8);
+  background: var(--white);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.auth-head {
+  margin-bottom: var(--sp-8);
+}
+
+.auth-head h1 {
+  font-size: var(--fs-2xl);
+  margin-bottom: 6px;
+}
+
+.auth-head p {
+  color: var(--ink-500);
+}
+
+.auth-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px var(--sp-3);
+  margin-bottom: var(--sp-5);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--r-full);
+  background: var(--navy-100);
+  color: var(--navy-600);
+}
+.auth-role svg {
+  width: 14px;
+  height: 14px;
+}
+
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+  flex-wrap: wrap;
+}
+
+.auth-foot {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: var(--fs-base);
+  color: var(--ink-500);
+}
+
+.auth-foot a {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Demo credential hint — remove once the real backend is connected */
+.demo-hint {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-6);
+  background: var(--gold-100);
+  border: 1px solid var(--gold-200);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  color: #7a621a;
+  line-height: var(--lh-snug);
+}
+.demo-hint svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 2px;
+}
+.demo-hint code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.65);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: var(--navy-700);
+}
+
+/* Inline form-level error */
+.form-alert {
+  display: none;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-5);
+  background: var(--danger-bg);
+  border: 1px solid rgba(192, 57, 43, 0.25);
+  border-radius: var(--r-md);
+  font-size: var(--fs-base);
+  color: #8e2b20;
+  line-height: var(--lh-snug);
+}
+.form-alert.is-shown {
+  display: flex;
+  animation: shake 320ms var(--ease);
+}
+.form-alert svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--danger);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@media (max-width: 940px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .auth-aside {
+    padding: var(--sp-8) var(--sp-6);
+  }
+  .auth-aside-body {
+    padding-block: var(--sp-6);
+    max-width: none;
+  }
+  .auth-aside-body h2 {
+    font-size: var(--fs-2xl);
+  }
+  .auth-points,
+  .auth-aside-foot {
+    display: none;
+  }
+  .auth-main {
+    padding: var(--sp-10) var(--sp-5) var(--sp-12);
+  }
+}

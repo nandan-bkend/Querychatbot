@@ -1,0 +1,119 @@
+/* ==========================================================================
+   tokens.css — Design tokens for the College Enquiry Chatbot
+   Single source of truth for colour, type, spacing, radius, shadow.
+   Change a value here and the entire application re-themes.
+   ========================================================================== */
+
+:root {
+  /* ---- Brand: Academic navy ---- */
+  --navy-900: #0b1f38;
+  --navy-800: #0d2440;
+  --navy-700: #0f2a4a;
+  --navy-600: #163760;
+  --navy-500: #1e4573;
+  --navy-400: #3c648f;
+  --navy-200: #a9bdd4;
+  --navy-100: #e8eef6;
+
+  /* ---- Brand: Gold accent ---- */
+  --gold-600: #a8871d;
+  --gold-500: #c9a227;
+  --gold-400: #dfba4c;
+  --gold-200: #f0dfa4;
+  --gold-100: #fbf3dc;
+
+  /* ---- Neutrals ---- */
+  --ink-900: #111826;
+  --ink-700: #303b4d;
+  --ink-500: #5b6779;
+  --ink-400: #7b8798;
+  --ink-300: #a3adbb;
+  --white: #ffffff;
+  --slate-50: #f6f8fb;
+  --slate-100: #eef2f7;
+  --line: #e3e8ef;
+  --line-strong: #cfd8e3;
+
+  /* ---- Status ---- */
+  --success: #0f8a5f;
+  --success-bg: #e6f5ee;
+  --warning: #b7791f;
+  --warning-bg: #fdf3e2;
+  --danger: #c0392b;
+  --danger-bg: #fdecea;
+  --info: #1e4573;
+  --info-bg: #e8eef6;
+
+  /* ---- Typography ---- */
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Palatino,
+    Georgia, "Times New Roman", serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --fs-xs: 0.75rem;    /* 12 */
+  --fs-sm: 0.8125rem;  /* 13 */
+  --fs-base: 0.9375rem;/* 15 */
+  --fs-md: 1rem;       /* 16 */
+  --fs-lg: 1.125rem;   /* 18 */
+  --fs-xl: 1.375rem;   /* 22 */
+  --fs-2xl: 1.75rem;   /* 28 */
+  --fs-3xl: 2.25rem;   /* 36 */
+  --fs-4xl: 3rem;      /* 48 */
+
+  --lh-tight: 1.2;
+  --lh-snug: 1.4;
+  --lh-normal: 1.6;
+
+  /* ---- Spacing (4px grid) ---- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+
+  /* ---- Radius ---- */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-full: 999px;
+
+  /* ---- Shadow ---- */
+  --sh-1: 0 1px 2px rgba(17, 24, 38, 0.06), 0 1px 3px rgba(17, 24, 38, 0.04);
+  --sh-2: 0 4px 12px rgba(17, 24, 38, 0.08), 0 1px 3px rgba(17, 24, 38, 0.04);
+  --sh-3: 0 16px 40px rgba(11, 31, 56, 0.16), 0 4px 12px rgba(11, 31, 56, 0.08);
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 120ms var(--ease);
+  --t-base: 200ms var(--ease);
+  --t-slow: 320ms var(--ease);
+
+  /* ---- Layout ---- */
+  --container: 1160px;
+  --sidebar-w: 254px;
+  --topbar-h: 64px;
+
+  /* ---- Z-index ---- */
+  --z-sticky: 100;
+  --z-drawer: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

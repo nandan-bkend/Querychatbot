@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Student Login — College Enquiry Chatbot</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="assets/css/tokens.css" />
+<link rel="stylesheet" href="assets/css/base.css" />
+<link rel="stylesheet" href="assets/css/components.css" />
+<link rel="stylesheet" href="assets/css/auth.css" />
+</head>
+<body>
+
+<div class="auth-page">
+
+  <!-- ==================================================== BRAND PANEL -->
+  <aside class="auth-aside">
+    <a class="brand" href="index.html">
+      <span class="crest">VIET</span>
+      <span class="brand-text">
+        <span class="brand-name">Vidyaranya Institute</span>
+        <span class="brand-sub">of Engineering &amp; Technology</span>
+      </span>
+    </a>
+
+    <div class="auth-aside-body">
+      <h2>Your college enquiries, answered instantly.</h2>
+      <p>
+        Sign in with your college email address to start asking the enquiry
+        chatbot about departments, faculty, timings and campus facilities.
+      </p>
+
+      <div class="auth-points">
+        <div class="auth-point">
+          <span data-icon="checkCircle"></span>
+          <span>Ask questions in plain English, any time of day</span>
+        </div>
+        <div class="auth-point">
+          <span data-icon="checkCircle"></span>
+          <span>Answers come straight from official college records</span>
+        </div>
+        <div class="auth-point">
+          <span data-icon="checkCircle"></span>
+          <span>No queueing at the office counter for routine information</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="auth-aside-foot">
+      Vidyaranya Institute of Engineering &amp; Technology, Bengaluru<br />
+      Affiliated to VTU, Belagavi · Approved by AICTE
+    </p>
+  </aside>
+
+  <!-- ===================================================== FORM PANEL -->
+  <main class="auth-main">
+    <div class="auth-card">
+
+      <span class="auth-role">
+        <span data-icon="userCheck"></span>
+        Student Portal
+      </span>
+
+      <div class="auth-head">
+        <h1>Student Login</h1>
+        <p>Enter your college credentials to continue.</p>
+      </div>
+
+      <!-- Demo credentials — delete this block once the backend is connected -->
+      <div class="demo-hint">
+        <span data-icon="info"></span>
+        <div>
+          <strong>Demo login:</strong>
+          <code>student@viet.edu.in</code> / <code>student123</code>
+        </div>
+      </div>
+
+      <div class="form-alert" id="formAlert" role="alert">
+        <span data-icon="alertCircle"></span>
+        <span id="formAlertMsg"></span>
+      </div>
+
+      <form id="loginForm" data-role="student" data-redirect="student-chat.html">
+
+        <div class="field">
+          <label class="field-label" for="email">
+            College email address<span class="req">*</span>
+          </label>
+          <div class="input-group">
+            <span data-icon="mail"></span>
+            <input class="input" type="email" id="email" name="email"
+                   placeholder="yourname@viet.edu.in" autocomplete="username"
+                   data-validate="required email" data-label="Email address" />
+          </div>
+          <div class="field-error"></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="password">
+            Password<span class="req">*</span>
+          </label>
+          <div class="input-group">
+            <span data-icon="shield"></span>
+            <input class="input" type="password" id="password" name="password"
+                   placeholder="Enter your password" autocomplete="current-password"
+                   data-validate="required min:6" data-label="Password" />
+            <button class="pw-toggle" type="button" data-pw-toggle="password"
+                    aria-label="Show password">
+              <span data-icon="eye"></span>
+            </button>
+          </div>
+          <div class="field-error"></div>
+        </div>
+
+        <div class="auth-row">
+          <label class="checkbox">
+            <input type="checkbox" id="remember" name="remember" />
+            <span>Remember me</span>
+          </label>
+          <a href="#" id="forgotLink" class="text-sm">Forgot password?</a>
+        </div>
+
+        <button class="btn btn-primary btn-lg btn-block" type="submit" id="submitBtn">
+          Sign in to Chatbot
+        </button>
+      </form>
+
+      <div class="auth-foot">
+        <a href="index.html">
+          <span data-icon="chevronRight" style="transform:rotate(180deg)"></span>
+          Back to Home
+        </a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ================================================ FORGOT PASSWORD -->
+<div class="modal-backdrop" id="forgotModal" role="dialog" aria-modal="true"
+     aria-labelledby="forgotTitle" aria-hidden="true">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div>
+        <h3 id="forgotTitle">Forgot your password?</h3>
+        <p>Student accounts are managed by the college.</p>
+      </div>
+      <button class="btn-icon" type="button" data-close-modal aria-label="Close">
+        <span data-icon="close"></span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted" style="line-height:var(--lh-normal)">
+        Passwords cannot be reset from this page. Please contact the
+        administrative office in Block A, or write to
+        <strong>info@viet.edu.in</strong> from your registered email address
+        along with your USN. The office will reset your password within one
+        working day.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" type="button" data-close-modal>Got it</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/login.js"></script>
+</body>
+</html>

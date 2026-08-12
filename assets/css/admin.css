@@ -1,0 +1,895 @@
+/* ==========================================================================
+   admin.css — Administrative side
+   Deliberately a different visual system to the student side: a permanent
+   dark sidebar, denser tables and tighter spacing, so it is never mistaken
+   for the student interface.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Shell
+   ========================================================================== */
+
+.admin {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--slate-50);
+}
+
+/* ---- Sidebar ---- */
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--navy-900);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: var(--z-drawer);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-brand .crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: var(--r-sm);
+  background: linear-gradient(150deg, var(--gold-400), var(--gold-600));
+  color: var(--navy-900);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.sidebar-brand .st {
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.sidebar-brand .st b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--white);
+}
+
+.sidebar-brand .st span {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--gold-400);
+  font-weight: 600;
+}
+
+.sidebar-section {
+  padding: var(--sp-5) var(--sp-3) var(--sp-2);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(169, 189, 212, 0.6);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 0 var(--sp-3) var(--sp-4);
+  overflow-y: auto;
+}
+
+.sidebar-nav a,
+.sidebar-nav button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 10px var(--sp-3);
+  margin-bottom: 2px;
+  font-size: var(--fs-base);
+  font-weight: 500;
+  color: var(--navy-200);
+  border-radius: var(--r-sm);
+  text-align: left;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.sidebar-nav svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  opacity: 0.8;
+}
+
+.sidebar-nav a:hover,
+.sidebar-nav button:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--white);
+}
+
+.sidebar-nav a.is-active {
+  background: rgba(201, 162, 39, 0.14);
+  color: var(--white);
+  font-weight: 600;
+}
+
+.sidebar-nav a.is-active::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: var(--gold-500);
+}
+
+.sidebar-nav a.is-active svg {
+  opacity: 1;
+  color: var(--gold-400);
+}
+
+.sidebar-nav .is-danger {
+  color: #f0a8a0;
+}
+.sidebar-nav .is-danger:hover {
+  background: rgba(192, 57, 43, 0.16);
+  color: #ffc7c0;
+}
+
+.sidebar-foot {
+  padding: var(--sp-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(169, 189, 212, 0.75);
+  margin-bottom: var(--sp-3);
+}
+
+/* ---- Content column ---- */
+.admin-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Topbar ---- */
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--topbar-h);
+  padding: 0 var(--sp-8);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar-title {
+  min-width: 0;
+}
+
+.topbar-title h1 {
+  font-family: var(--font-body);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.topbar-title p {
+  font-size: var(--fs-sm);
+  color: var(--ink-500);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-left: auto;
+}
+
+.admin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px var(--sp-3);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--r-full);
+  background: var(--navy-900);
+  color: var(--gold-400);
+}
+.admin-chip svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---- Profile trigger ---- */
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px var(--sp-2) 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  background: var(--white);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.profile-btn:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--sh-1);
+}
+
+.profile-btn .avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 11px;
+  background: var(--navy-700);
+  color: var(--gold-400);
+}
+
+.profile-btn .pname {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-900);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-btn svg {
+  width: 15px;
+  height: 15px;
+  color: var(--ink-400);
+}
+
+.sidebar-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-sm);
+  color: var(--ink-700);
+  border: 1px solid var(--line);
+  background: var(--white);
+}
+.sidebar-toggle svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* ---- Page body ---- */
+.admin-body {
+  flex: 1;
+  padding: var(--sp-8);
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-6);
+}
+
+/* ==========================================================================
+   2. Responsive — off-canvas sidebar
+   ========================================================================== */
+
+.admin-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-drawer) - 1);
+  background: rgba(11, 31, 56, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--t-base), visibility var(--t-base);
+}
+
+@media (max-width: 1024px) {
+  .admin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-w);
+    transform: translateX(-100%);
+    transition: transform var(--t-slow);
+    box-shadow: var(--sh-3);
+  }
+
+  body.sidebar-open .admin-sidebar {
+    transform: none;
+  }
+
+  body.sidebar-open .admin-scrim {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .sidebar-toggle {
+    display: flex;
+  }
+
+  .admin-topbar {
+    padding: 0 var(--sp-5);
+  }
+
+  .admin-body {
+    padding: var(--sp-6) var(--sp-5);
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar-title p {
+    display: none;
+  }
+  .profile-btn .pname {
+    display: none;
+  }
+  .admin-chip {
+    display: none;
+  }
+  .admin-body {
+    padding: var(--sp-5) var(--sp-4);
+  }
+}
+
+/* ==========================================================================
+   3. KPI cards
+   ========================================================================== */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+
+.kpi {
+  position: relative;
+  padding: var(--sp-5);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-1);
+  overflow: hidden;
+}
+
+.kpi::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--navy-500);
+}
+.kpi.tone-gold::after { background: var(--gold-500); }
+.kpi.tone-green::after { background: var(--success); }
+.kpi.tone-violet::after { background: #5b4b9e; }
+
+.kpi-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.kpi-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-500);
+}
+
+.kpi-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: var(--r-sm);
+  background: var(--navy-100);
+  color: var(--navy-600);
+}
+.kpi-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.kpi.tone-gold .kpi-icon { background: var(--gold-100); color: var(--gold-600); }
+.kpi.tone-green .kpi-icon { background: var(--success-bg); color: var(--success); }
+.kpi.tone-violet .kpi-icon { background: #ede9f7; color: #5b4b9e; }
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--navy-900);
+  letter-spacing: -0.03em;
+}
+
+.kpi-sub {
+  margin-top: 6px;
+  font-size: var(--fs-sm);
+  color: var(--ink-400);
+}
+
+@media (max-width: 1100px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 520px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   4. Dashboard panels
+   ========================================================================== */
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  align-items: start;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+@media (max-width: 1000px) {
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mini-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mini-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-6);
+  border-bottom: 1px solid var(--line);
+}
+
+.mini-item:last-child {
+  border-bottom: none;
+}
+
+.mini-item .mi-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.mini-item .mi-title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--ink-900);
+  line-height: var(--lh-snug);
+  margin-bottom: 4px;
+}
+
+.mini-item .mi-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  font-size: var(--fs-sm);
+  color: var(--ink-400);
+}
+
+/* ---- Activity timeline ---- */
+.timeline {
+  padding: var(--sp-5) var(--sp-6);
+}
+
+.tl-item {
+  position: relative;
+  display: flex;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-5);
+}
+
+.tl-item:last-child {
+  padding-bottom: 0;
+}
+
+.tl-item::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 30px;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+
+.tl-item:last-child::before {
+  display: none;
+}
+
+.tl-dot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--slate-100);
+  color: var(--ink-500);
+  border: 2px solid var(--white);
+}
+.tl-dot svg {
+  width: 13px;
+  height: 13px;
+}
+.tl-dot.act-added { background: var(--success-bg); color: var(--success); }
+.tl-dot.act-updated { background: var(--info-bg); color: var(--navy-500); }
+.tl-dot.act-deleted { background: var(--danger-bg); color: var(--danger); }
+
+.tl-body {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.tl-text {
+  font-size: var(--fs-base);
+  color: var(--ink-700);
+  line-height: var(--lh-snug);
+}
+
+.tl-text b {
+  color: var(--ink-900);
+  font-weight: 600;
+}
+
+.tl-time {
+  margin-top: 3px;
+  font-size: var(--fs-xs);
+  color: var(--ink-400);
+}
+
+/* ==========================================================================
+   5. Table cells specific to the admin pages
+   ========================================================================== */
+
+.q-cell {
+  max-width: 340px;
+}
+
+.q-cell .qt {
+  font-weight: 600;
+  color: var(--ink-900);
+  line-height: var(--lh-snug);
+  margin-bottom: 3px;
+}
+
+.q-cell .qid {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-400);
+}
+
+.a-cell {
+  max-width: 380px;
+  color: var(--ink-500);
+  line-height: var(--lh-snug);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.person .pn {
+  font-weight: 600;
+  color: var(--ink-900);
+  line-height: 1.3;
+}
+
+.person .pe {
+  font-size: var(--fs-sm);
+  color: var(--ink-400);
+}
+
+/* Short, predictable values that should never wrap mid-record */
+.nowrap {
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .table-stack .nowrap {
+    white-space: normal;
+  }
+}
+
+/* ==========================================================================
+   6. Faculty card view
+   ========================================================================== */
+
+.faculty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  gap: var(--sp-4);
+  padding: var(--sp-6);
+}
+
+.fac-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-5);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  transition: border-color var(--t-base), box-shadow var(--t-base);
+}
+
+.fac-card:hover {
+  border-color: var(--navy-200);
+  box-shadow: var(--sh-2);
+}
+
+.fac-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.fac-top .avatar {
+  width: 46px;
+  height: 46px;
+  font-size: var(--fs-base);
+}
+
+.fac-name {
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1.3;
+}
+
+.fac-desig {
+  font-size: var(--fs-sm);
+  color: var(--navy-500);
+  font-weight: 500;
+}
+
+.fac-meta {
+  display: grid;
+  gap: 7px;
+  padding-top: var(--sp-4);
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-sm);
+  color: var(--ink-500);
+}
+
+.fac-meta div {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.fac-meta svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--ink-300);
+}
+
+.fac-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding-top: var(--sp-4);
+  margin-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+
+/* ==========================================================================
+   7. Loading skeletons for tables
+   ========================================================================== */
+
+.skel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-6);
+  border-bottom: 1px solid var(--line);
+}
+
+.skel-row:last-child {
+  border-bottom: none;
+}
+
+.skel-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* ==========================================================================
+   8. Admin login — overrides on top of auth.css
+   The whole page sits on navy with the form floating as a white card, so the
+   administrative entrance never looks like the student one.
+   ========================================================================== */
+
+.auth-page.is-admin .auth-main {
+  background: var(--navy-800);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-page.is-admin .auth-main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+.auth-page.is-admin .auth-card {
+  position: relative;
+  z-index: 1;
+  max-width: 424px;
+  padding: var(--sp-8);
+  background: var(--white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-3);
+}
+
+.auth-page.is-admin .auth-role {
+  background: var(--navy-900);
+  color: var(--gold-400);
+}
+
+.auth-page.is-admin .auth-aside {
+  background: linear-gradient(160deg, var(--navy-900), #071628);
+}
+
+/* Restricted-access notice */
+.restricted {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-6);
+  background: var(--navy-100);
+  border: 1px solid #cfdcea;
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+  color: var(--navy-600);
+}
+
+.restricted svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--navy-500);
+}
+
+@media (max-width: 940px) {
+  .auth-page.is-admin .auth-card {
+    padding: var(--sp-6);
+  }
+}
+
+/* ==========================================================================
+   9. Stacked tables on small screens
+   A .table-stack table drops its header row below 760px and each record
+   becomes a labelled card, so nothing has to be scrolled sideways on a phone.
+   ========================================================================== */
+
+@media (max-width: 760px) {
+  /* The table stops behaving as a table so each record can lay out as a
+     simple block card that always fits the viewport width. */
+  .table-stack,
+  .table-stack tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .table-stack thead {
+    display: none;
+  }
+
+  .table-stack tbody tr {
+    display: block;
+    padding: var(--sp-4) var(--sp-5);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .table-stack tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .table-stack td {
+    display: block;
+    width: auto;
+    padding: 6px 0;
+    border: none;
+    text-align: left;
+  }
+
+  .table-stack td::before {
+    display: block;
+    content: attr(data-label);
+    margin-bottom: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-400);
+  }
+
+  .table-stack td.col-actions {
+    padding-top: var(--sp-3);
+    margin-top: var(--sp-2);
+    border-top: 1px solid var(--line);
+  }
+
+  .table-stack td.col-actions::before {
+    display: none;
+  }
+
+  .table-stack .q-cell,
+  .table-stack .a-cell {
+    max-width: none;
+  }
+
+  .table-stack .a-cell .clamp-2 {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .table-stack .nowrap {
+    white-space: normal;
+  }
+}

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>College Enquiry Chatbot — Vidyaranya Institute of Engineering &amp; Technology</title>
+<meta name="description" content="Ask questions about departments, faculty, timings, facilities and contact details, and get instant answers from the college enquiry chatbot." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="assets/css/tokens.css" />
+<link rel="stylesheet" href="assets/css/base.css" />
+<link rel="stylesheet" href="assets/css/components.css" />
+<link rel="stylesheet" href="assets/css/student.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<!-- ======================================================== NAVIGATION -->
+<header class="site-nav" id="siteNav">
+  <div class="container">
+    <a class="brand" href="index.html">
+      <span class="crest">VIET</span>
+      <span class="brand-text">
+        <span class="brand-name">Vidyaranya Institute</span>
+        <span class="brand-sub">of Engineering &amp; Technology</span>
+      </span>
+    </a>
+
+    <button class="nav-toggle" type="button" id="navToggle"
+            aria-label="Toggle navigation" aria-expanded="false">
+      <span data-icon="menu"></span>
+    </button>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#home" class="is-active">Home</a>
+      <a href="#about">About</a>
+      <a href="#enquiries">Enquiries</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="btn btn-on-dark btn-sm" href="student-login.html">Student Login</a>
+      <a class="btn btn-gold btn-sm" href="admin-login.html">Admin Login</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============================================================= HERO -->
+  <section class="hero" id="home">
+    <div class="container">
+      <div>
+        <span class="eyebrow">
+          <span data-icon="sparkle"></span>
+          NLP · TF-IDF · Naive Bayes
+        </span>
+
+        <h1>College Enquiry <em>Chatbot</em></h1>
+
+        <p class="hero-lead">
+          Students no longer need to visit the office counter for routine
+          questions. Ask about departments, faculty, class timings, facilities
+          or contact details in plain English, and the chatbot answers instantly
+          from the college's own information.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-gold btn-lg" href="student-login.html">
+            <span data-icon="messageSquare"></span>
+            Student Login
+          </a>
+          <a class="btn btn-on-dark btn-lg" href="admin-login.html">
+            <span data-icon="shield"></span>
+            Admin Login
+          </a>
+        </div>
+
+        <p class="hero-note">
+          Students ask questions · Administrators manage the answers
+        </p>
+      </div>
+
+      <!-- Static preview of the chat interface -->
+      <div class="hero-preview" aria-hidden="true">
+        <div class="preview-bar">
+          <span class="dot"></span>
+          Enquiry Assistant · Online
+        </div>
+        <div class="preview-msg from-user">
+          <p>Who is the HOD of the ISE department?</p>
+        </div>
+        <div class="preview-msg from-bot">
+          <p>The HOD of the ISE department is Dr. Ramesh N. Kulkarni,
+             Professor &amp; Head, Information Science &amp; Engineering.</p>
+        </div>
+        <div class="preview-msg from-user">
+          <p>What are the college timings?</p>
+        </div>
+        <div class="preview-msg from-bot">
+          <span class="preview-typing"><i></i><i></i><i></i></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ ABOUT -->
+  <section class="section" id="about">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">About the system</span>
+        <h2>One place for every college enquiry</h2>
+        <p>
+          The chatbot is trained on questions students actually ask. When a
+          question is typed, the backend identifies what is being asked and
+          returns the matching answer stored by the administration — so the
+          information is always official and up to date.
+        </p>
+      </div>
+
+      <div class="steps">
+        <article class="step">
+          <h3>Ask in plain English</h3>
+          <p>
+            Type the question the way you would ask a person at the office
+            counter. No forms, no menus, no waiting in queue.
+          </p>
+        </article>
+        <article class="step">
+          <h3>The system understands it</h3>
+          <p>
+            The Python backend processes the question using NLP, extracts
+            features with TF-IDF and classifies it with a Naive Bayes model to
+            identify what is being asked.
+          </p>
+        </article>
+        <article class="step">
+          <h3>You get the answer</h3>
+          <p>
+            The matching answer is fetched from the MySQL database and shown in
+            the chat instantly, exactly as the administration entered it.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== ENQUIRIES -->
+  <section class="section is-tint" id="enquiries">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">What you can ask</span>
+        <h2>Six categories of enquiry</h2>
+        <p>
+          Every question in the system belongs to one of these categories, all
+          maintained by the administrator through the admin panel.
+        </p>
+      </div>
+
+      <div class="cat-grid">
+        <article class="cat-card">
+          <div class="cat-icon"><span data-icon="building"></span></div>
+          <h3>Departments</h3>
+          <p>Department locations, heads of department, intake and branch details.</p>
+        </article>
+
+        <article class="cat-card">
+          <div class="cat-icon"><span data-icon="users"></span></div>
+          <h3>Faculty</h3>
+          <p>Faculty names, designations, email addresses and contact numbers.</p>
+        </article>
+
+        <article class="cat-card">
+          <div class="cat-icon"><span data-icon="clock"></span></div>
+          <h3>Timetable</h3>
+          <p>Class hours, break timings, working Saturdays and examination schedules.</p>
+        </article>
+
+        <article class="cat-card">
+          <div class="cat-icon"><span data-icon="bookOpen"></span></div>
+          <h3>College Information</h3>
+          <p>Affiliation, accreditation, admission process and programmes offered.</p>
+        </article>
+
+        <article class="cat-card">
+          <div class="cat-icon"><span data-icon="phone"></span></div>
+          <h3>Contact Information</h3>
+          <p>Office numbers, department email addresses and directions to the campus.</p>
+        </article>
+
+        <article class="cat-card">
+          <div class="cat-icon"><span data-icon="mapPin"></span></div>
+          <h3>Facilities</h3>
+          <p>Library, hostel, transport and sports facilities available on campus.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== CONTACT -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">Reach us</span>
+        <h2>College contact details</h2>
+        <p>
+          For matters the chatbot cannot answer, the administrative office is
+          open Monday to Saturday, 9:30 AM to 5:00 PM.
+        </p>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-item">
+          <div class="ci-icon"><span data-icon="mapPin"></span></div>
+          <div>
+            <h4>Campus</h4>
+            <p>Vidyaranya Campus, Jnanabharathi Main Road,<br />
+               Mallathahalli, Bengaluru – 560 056</p>
+          </div>
+        </div>
+
+        <div class="contact-item">
+          <div class="ci-icon"><span data-icon="phone"></span></div>
+          <div>
+            <h4>Telephone</h4>
+            <p>+91 80 2321 4500<br />+91 80 2321 4501</p>
+          </div>
+        </div>
+
+        <div class="contact-item">
+          <div class="ci-icon"><span data-icon="mail"></span></div>
+          <div>
+            <h4>Email</h4>
+            <p>info@viet.edu.in<br />admissions@viet.edu.in</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- =========================================================== FOOTER -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="brand">
+      <span class="crest">VIET</span>
+      <span class="brand-text">
+        <span class="brand-name">College Enquiry Chatbot</span>
+        <span class="brand-sub">Department of Information Science &amp; Engineering</span>
+      </span>
+    </div>
+    <div class="footer-meta">
+      <p>Vidyaranya Institute of Engineering &amp; Technology, Bengaluru</p>
+      <p>Affiliated to VTU, Belagavi · Approved by AICTE</p>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/site.js"></script>
+</body>
+</html>
