@@ -161,37 +161,57 @@
       });
   }
 
-  /* Small talk handled before the question bank is consulted */
+  /* ======================================================================
+     Conversation, not just question answering
+     A student who types "how are you" should get a human reply rather than a
+     message about the knowledge base. Patterns are anchored to the start of
+     the sentence so a real question that happens to begin with the same word
+     — "how many seats are there" — still goes to the matcher.
+     ====================================================================== */
+
   const SMALL_TALK = [
-    {
-      match: ["hi", "hello", "hey", "hii", "namaste", "greetings"],
-      reply:
-        "Hello! I am the college enquiry assistant. You can ask me about departments, faculty, class timings, facilities or contact details.",
-    },
-    {
-      match: ["thanks", "thank", "thankyou", "ty"],
-      reply: "You are welcome. Feel free to ask anything else about the college.",
-    },
-    {
-      match: ["bye", "goodbye", "ok", "okay"],
-      reply: "Glad to help. You can come back any time you have a question.",
-    },
-    {
-      match: ["help", "options", "menu"],
-      reply:
-        "I can answer questions in six areas: Departments, Faculty, Timetable, College Information, Contact Information and Facilities. Try one of the suggested questions below.",
-    },
+    [/^(hi|hii+|hey+|hello|helo|yo|namaste|greetings)\b|^good (morning|afternoon|evening|day)\b/,
+     "Hello! I'm the SEA College enquiry assistant. Ask me anything about the " +
+     "departments, faculty, class timings, facilities or contact details."],
+
+    [/^how (are|r) (you|u)\b|^how do you do\b|^how('?s| is| are) (it going|things)\b|^what('?s| is) up\b|^wassup\b|^sup\b|^whatsup\b/,
+     "I'm doing well, thank you for asking! Ready whenever you are — what " +
+     "would you like to know about the college?"],
+
+    [/^(who|what) (are|r) (you|u)\b|^what('?s| is) your name\b|^your name\b|^introduce yourself\b|^tell me about yourself\b/,
+     "I'm the SEA College of Engineering and Technology enquiry assistant. " +
+     "I'm here to answer questions about the departments, faculty, timings, " +
+     "facilities and contact details, so you don't have to visit the office " +
+     "counter for everyday queries."],
+
+    [/^what can (you|u) (do|answer|help)|^what do you know\b|^how can you help\b|^help$|^help me\b|^options$|^menu$/,
+     "I can help with six areas: Departments, Faculty, Timetable, College " +
+     "Information, Contact Information and Facilities. Try one of the " +
+     "suggested questions below, or just type your question in your own words."],
+
+    [/^(thanks|thank you|thankyou|thank u|ty|thx|tq)\b/,
+     "You're very welcome. Ask me anything else whenever you like."],
+
+    [/^(bye|goodbye|good bye|see you|see ya|cya|tata)\b/,
+     "Goodbye, and all the best with your studies. Come back any time you " +
+     "have a question."],
+
+    [/^(ok|okay|k|cool|nice|great|good|awesome|super|fine|alright)\b\W*$/,
+     "Glad that helped. Anything else you'd like to know?"],
+
+    [/^sorry\b|^my (bad|mistake)\b/,
+     "No need to apologise at all. What would you like to ask?"],
+
+    [/^(yes|yeah|yep|ya|no|nope|nah)\b\W*$/,
+     "Just type your question whenever you're ready — I'm listening."],
   ];
 
   function smallTalkReply(text) {
-    const words = String(text).toLowerCase().replace(/[^a-z\s]/g, "").trim().split(/\s+/);
-    if (words.length > 3) return null; /* a real question, not a greeting */
+    const cleaned = String(text).toLowerCase()
+      .replace(/[^\w\s']/g, " ").replace(/\s+/g, " ").trim();
+    if (!cleaned || cleaned.split(" ").length > 6) return null;
     for (let i = 0; i < SMALL_TALK.length; i++) {
-      for (let j = 0; j < words.length; j++) {
-        if (SMALL_TALK[i].match.indexOf(words[j]) !== -1) {
-          return SMALL_TALK[i].reply;
-        }
-      }
+      if (SMALL_TALK[i][0].test(cleaned)) return SMALL_TALK[i][1];
     }
     return null;
   }
@@ -269,8 +289,31 @@
     return bestCovered >= needed ? best : null;
   }
 
-  const FALLBACK =
-    "I could not find that in my knowledge base yet. I can currently answer questions about departments, faculty, class timings, college information, contact details and campus facilities. Try rephrasing your question, or contact the college office at +91 80 2321 4500.";
+  /* Declining well matters as much as answering well. These rotate, so two
+     unknown questions in a row do not produce the same sentence twice. */
+  const FALLBACKS = [
+    "Sorry, I don't know that one yet. I'm best with things like departments, " +
+    "faculty, class timings, facilities and contact details — happy to help " +
+    "with any of those.",
+
+    "I'm afraid that's outside what I've been taught so far. Ask me about the " +
+    "departments, our faculty, class timings or campus facilities and I " +
+    "should be able to help.",
+
+    "That one's not in my notes yet, sorry. I can tell you about departments, " +
+    "faculty members, timings, admissions or how to contact the college.",
+
+    "Apologies — I don't have an answer for that. Try asking about the " +
+    "departments, the faculty, class timings or campus facilities, and I'll " +
+    "do my best.",
+  ];
+
+  function softDecline() {
+    const base = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+    return base + (Math.random() < 0.4
+      ? " If it's something urgent, the college office is on +91 80 2321 4500."
+      : "");
+  }
 
   /* ======================================================================
      Send flow
@@ -302,7 +345,7 @@
         if (match) {
           addBotMessage(match.answer, match.category);
         } else {
-          addBotMessage(FALLBACK, null);
+          addBotMessage(softDecline(), null);
         }
       }
 

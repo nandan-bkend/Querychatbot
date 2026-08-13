@@ -24,6 +24,8 @@ Two safeguards keep it from confidently returning nonsense:
     python -m chatbot.predict "what are the college timings"
 """
 
+import random
+import re
 import sys
 from pathlib import Path
 
@@ -39,20 +41,79 @@ from .preprocess import content_stems, preprocess  # noqa: E402
 
 MODEL_FILE = Config.MODEL_DIR / "chatbot_model.joblib"
 
-FALLBACK = (
-    "I could not find that in my knowledge base yet. I can answer questions "
-    "about departments, faculty, class timings, college information, contact "
-    "details and campus facilities. Try rephrasing your question, or contact "
-    "the college office at +91 80 2321 4500."
+# ==========================================================================
+#  What the assistant says when it cannot answer
+#
+#  Declining well matters as much as answering well. A blunt "not found in my
+#  knowledge base" reads like an error message and makes the whole system feel
+#  brittle. These are apologetic, offer a way forward, and rotate so that
+#  asking two unknown questions in a row does not produce the same sentence
+#  twice — repetition is what makes a chatbot feel mechanical.
+# ==========================================================================
+
+FALLBACKS = [
+    "Sorry, I don't know that one yet. I'm best with things like departments, "
+    "faculty, class timings, facilities and contact details — happy to help "
+    "with any of those.",
+
+    "I'm afraid that's outside what I've been taught so far. Ask me about the "
+    "departments, our faculty, class timings or campus facilities and I should "
+    "be able to help.",
+
+    "That one's not in my notes yet, sorry. I can tell you about departments, "
+    "faculty members, timings, admissions or how to contact the college.",
+
+    "Apologies — I don't have an answer for that. Try asking about the "
+    "departments, the faculty, class timings or campus facilities, and I'll do "
+    "my best.",
+]
+
+OFFICE_NOTE = (
+    " If it's something urgent, the college office is on +91 80 2321 4500."
 )
 
-GREETINGS = {
-    "hi": "Hello! I am the college enquiry assistant. You can ask me about "
-          "departments, faculty, class timings, facilities or contact details.",
-    "hello": None, "hey": None, "hii": None, "namaste": None, "greetings": None,
-}
-THANKS = {"thanks", "thank", "thankyou", "ty"}
-BYES = {"bye", "goodbye", "ok", "okay"}
+# Regex is used rather than word matching so that "how are you" is recognised
+# while "how many seats are there" is left alone for the classifier.
+SMALL_TALK = [
+    (r"^(hi|hii+|hey+|hello|helo|yo|namaste|greetings)\b|"
+     r"^good (morning|afternoon|evening|day)\b",
+     "Hello! I'm the SEA College enquiry assistant. Ask me anything about the "
+     "departments, faculty, class timings, facilities or contact details."),
+
+    (r"^how (are|r) (you|u)\b|^how do you do\b|^how('s| is| are) (it going|things)\b|"
+     r"^hows it going\b|^what('?s| is) up\b|^wassup\b|^sup\b|^whatsup\b",
+     "I'm doing well, thank you for asking! Ready whenever you are — what "
+     "would you like to know about the college?"),
+
+    (r"^(who|what) (are|r) (you|u)\b|^what('s| is) your name\b|^your name\b|"
+     r"^introduce yourself\b|^tell me about yourself\b",
+     "I'm the SEA College of Engineering and Technology enquiry assistant. I'm "
+     "here to answer questions about the departments, faculty, timings, "
+     "facilities and contact details, so you don't have to visit the office "
+     "counter for everyday queries."),
+
+    (r"^what can (you|u) (do|answer|help)|^what do you know\b|"
+     r"^how can you help\b|^help$|^help me\b|^options$|^menu$",
+     "I can help with six areas: Departments, Faculty, Timetable, College "
+     "Information, Contact Information and Facilities. Try one of the "
+     "suggested questions below, or just type your question in your own words."),
+
+    (r"^(thanks|thank you|thankyou|thank u|ty|thx|tq)\b",
+     "You're very welcome. Ask me anything else whenever you like."),
+
+    (r"^(bye|goodbye|good bye|see you|see ya|cya|tata)\b",
+     "Goodbye, and all the best with your studies. Come back any time you "
+     "have a question."),
+
+    (r"^(ok|okay|k|cool|nice|great|good|awesome|super|fine|alright)\b\W*$",
+     "Glad that helped. Anything else you'd like to know?"),
+
+    (r"^sorry\b|^my (bad|mistake)\b",
+     "No need to apologise at all. What would you like to ask?"),
+
+    (r"^(yes|yeah|yep|ya|no|nope|nah)\b\W*$",
+     "Just type your question whenever you're ready — I'm listening."),
+]
 
 _model = None
 
@@ -77,23 +138,36 @@ def reload_model():
 
 
 def small_talk(text):
-    """Handle greetings before the classifier is consulted."""
-    words = [w for w in str(text).lower().replace("?", " ").split() if w.isalpha()]
-    if not words or len(words) > 3:
+    """
+    Handle conversational openers before the classifier is consulted.
+
+    A student who types "how are you" should get a human reply, not a message
+    about the knowledge base. Matching is anchored to the start of the sentence
+    so that a genuine question beginning with the same word — "how many seats
+    are there" — still goes to the model.
+    """
+    cleaned = re.sub(r"[^\w\s']", " ", str(text).lower()).strip()
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    if not cleaned or len(cleaned.split()) > 6:
         return None
-    for word in words:
-        if word in GREETINGS:
-            return GREETINGS["hi"]
-        if word in THANKS:
-            return "You are welcome. Feel free to ask anything else about the college."
-        if word in BYES:
-            return "Glad to help. You can come back any time you have a question."
-        if word in {"help", "options", "menu"}:
-            return (
-                "I can answer questions about Departments, Faculty, Timetable, "
-                "College Information, Contact Information and Facilities."
-            )
+    for pattern, reply in SMALL_TALK:
+        if re.search(pattern, cleaned):
+            return reply
     return None
+
+
+def soft_decline():
+    """
+    Build a reply for a question the assistant cannot answer.
+
+    An earlier version offered the nearest stored question as a "did you mean"
+    suggestion. It was removed: at this similarity range the nearest match is
+    often unrelated — "parking facility" suggested "What are the library
+    timings?" — and a confidently wrong suggestion makes the assistant look
+    more confused than a straightforward apology does. When it does not know,
+    it says so pleasantly and points at what it does know.
+    """
+    return random.choice(FALLBACKS) + (OFFICE_NOTE if random.random() < 0.4 else "")
 
 
 def active_question_ids():
@@ -143,7 +217,7 @@ def ask(text, user_id=None, log=True):
     """
     text = (text or "").strip()
     if not text:
-        return {"answer": FALLBACK, "category": None, "matched": None,
+        return {"answer": soft_decline(), "category": None, "matched": None,
                 "confidence": 0.0, "similarity": 0.0, "source": "empty"}
 
     chit = small_talk(text)
@@ -158,7 +232,7 @@ def ask(text, user_id=None, log=True):
 
     document = preprocess(text)
     if not document:
-        return {"answer": FALLBACK, "category": None, "matched": None,
+        return {"answer": soft_decline(), "category": None, "matched": None,
                 "confidence": 0.0, "similarity": 0.0, "source": "no_tokens"}
 
     # ---- vocabulary gate ----
@@ -171,7 +245,7 @@ def ask(text, user_id=None, log=True):
     subject = content_stems(text)
     known_subject = [t for t in subject if t in vocabulary]
     if not known_subject:
-        return {"answer": FALLBACK, "category": None, "matched": None,
+        return {"answer": soft_decline(), "category": None, "matched": None,
                 "confidence": 0.0, "similarity": 0.0, "source": "out_of_scope"}
 
     # ---- coverage ----
@@ -206,15 +280,15 @@ def ask(text, user_id=None, log=True):
             matched, score, source = wider, wider_score, "global"
 
     if matched is None or score < Config.MIN_SIMILARITY:
-        result = {"answer": FALLBACK, "category": category, "matched": None,
-                  "confidence": confidence, "similarity": float(score),
-                  "source": "fallback"}
+        result = {"answer": soft_decline(), "category": category,
+                  "matched": None, "confidence": confidence,
+                  "similarity": float(score), "source": "fallback"}
     else:
         rows = answer_for(matched["id"])
         if not rows:
-            result = {"answer": FALLBACK, "category": category, "matched": None,
-                      "confidence": confidence, "similarity": float(score),
-                      "source": "missing_row"}
+            result = {"answer": soft_decline(), "category": category,
+                      "matched": None, "confidence": confidence,
+                      "similarity": float(score), "source": "missing_row"}
         else:
             row = rows[0]
             result = {
