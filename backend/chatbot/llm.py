@@ -34,6 +34,7 @@ existed. Nothing here can break an answer the classifier already found.
     python -m chatbot.llm "is there a hostel"     # try it directly
 """
 
+import logging
 import re
 import sys
 from pathlib import Path
@@ -47,6 +48,20 @@ from db import query  # noqa: E402
 # Checked case-insensitively and as a substring, because a model that has been
 # told to say one word will occasionally say "NO_ANSWER." with a full stop.
 NO_ANSWER = "NO_ANSWER"
+
+log = logging.getLogger(__name__)
+
+
+def _note(reason, detail=""):
+    """
+    Explain a decline. Silence is the right behaviour for a student — they
+    should see a polite apology, not a stack trace — but it makes a
+    misconfiguration invisible, and a rate limit look exactly like a refusal.
+    Set LLM_DEBUG=1 in .env to see which of the two just happened.
+    """
+    if Config.LLM_DEBUG:
+        log.warning("fallback declined (%s) %s", reason, str(detail)[:300])
+    return None
 
 INSTRUCTION = f"""\
 You are the student enquiry assistant for {COLLEGE['name']}, Bengaluru.
@@ -74,6 +89,19 @@ Rules, in order of importance:
 
 _client = None
 _facts = None
+
+# Answers already produced, keyed on the normalised question. The free tier
+# allows only a handful of requests per minute, so asking the same thing twice
+# must not cost two of them — during a demonstration the same question often
+# gets asked repeatedly. Cleared whenever the question bank changes.
+_cache = {}
+_CACHE_LIMIT = 200
+
+# Whether this model accepts thinking_budget=0. The newer Gemini models reject
+# it outright, so the first call discovers which kind we are talking to and
+# every call afterwards skips straight to the shape that works — otherwise a
+# rejected field would cost a wasted round trip on every single question.
+_thinking_ok = True
 
 
 # ==========================================================================
@@ -111,6 +139,7 @@ def reset_facts():
     """
     global _facts
     _facts = None
+    _cache.clear()      # answers were derived from the old facts
 
 
 def build_facts():
@@ -203,13 +232,7 @@ def _usable(text):
     (378), so a legitimate reply — even one combining two stored answers —
     fits comfortably underneath it.
     """
-    if not text:
-        return False
-    if NO_ANSWER.lower() in text.lower():
-        return False
-    if len(text) > 700:
-        return False
-    return True
+    return len(text) <= 700
 
 
 # ==========================================================================
@@ -255,26 +278,62 @@ def answer(question):
     if not question or not available():
         return None
 
+    global _thinking_ok
+
+    key = re.sub(r"[^\w\s]", "", question.lower()).strip()
+    key = re.sub(r"\s+", " ", key)
+    if key in _cache:
+        return _cache[key]
+
     try:
-        text = _generate(question)
+        text = _generate(question, drop_thinking=not _thinking_ok)
     except Exception as first:
-        # Not every model accepts thinking_budget=0. Rather than lose the
-        # whole feature to one rejected field, retry once without it.
-        if not _is_config_error(first):
-            return None
+        if _is_rate_limit(first):
+            # The free tier allows only a handful of requests per minute.
+            # Retrying would just burn the next slot too, so decline now.
+            return _note("rate limited", first)
+        # Not every model accepts thinking_budget=0, and the ones that reject
+        # it do not say so consistently — the message has been seen both as
+        # "Request contains an invalid argument" and as a named complaint
+        # about the thinking budget. Matching on the wording was unreliable,
+        # so any first failure simply earns one retry without the field.
+        # _thinking_ok makes that a once-per-process cost, not a per-question
+        # one, and a genuine outage still costs only two attempts.
+        if not _thinking_ok:
+            return _note("api error", first)
+        _thinking_ok = False
         try:
             text = _generate(question, drop_thinking=True)
-        except Exception:
-            return None
+        except Exception as second:
+            return _note("api error after retry", second)
 
-    text = _clean(text)
-    return text if _usable(text) else None
+    cleaned = _clean(text)
+    if not cleaned:
+        return _note("empty reply")
+
+    # A refusal is worth remembering — it is a decision about the facts, and
+    # it will be the same decision next time. A failure is not: rate limits
+    # and timeouts pass, and caching None for one would leave that question
+    # permanently unanswerable for the life of the process.
+    if NO_ANSWER.lower() in cleaned.lower():
+        return _remember(key, _note("not covered by the facts"))
+    if not _usable(cleaned):
+        return _remember(key, _note("reply rejected", cleaned[:120]))
+    return _remember(key, cleaned)
 
 
-def _is_config_error(error):
+def _remember(key, value):
+    if len(_cache) >= _CACHE_LIMIT:
+        _cache.clear()          # a college demo never gets near this
+    _cache[key] = value
+    return value
+
+
+def _is_rate_limit(error):
     message = str(error).lower()
-    return any(s in message for s in
-               ("thinking", "budget", "invalid_argument", "400"))
+    return "429" in message or "resource_exhausted" in message
+
+
 
 
 # ==========================================================================
@@ -296,8 +355,11 @@ def _self_test(question):
         return
 
     block = facts()
+    section = block.split("FACULTY\n", 1)[-1].split("\n\nOFFICIAL", 1)[0]
     print(f"  grounding: {len(block)} characters, "
-          f"{block.count('Q: ')} questions, {block.count('—')} faculty rows")
+          f"{block.count('Q: ')} questions, "
+          f"{sum(1 for l in section.splitlines() if l.startswith('- '))} "
+          f"faculty, {Config.GEMINI_MODEL}")
 
     print(f"\n  asking   : {question!r}")
     reply = answer(question)

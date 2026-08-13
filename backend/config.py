@@ -50,12 +50,28 @@ class Config:
     # and the application behaves exactly as it did before: the assistant
     # declines politely instead. Nothing else in the project depends on it.
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
-    # Seconds. Deliberately short: a student waiting on a chat reply would
-    # rather have the ordinary decline quickly than the perfect answer late.
-    LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "8"))
+    # An alias rather than a pinned version. Google retires specific models to
+    # new keys — gemini-2.5-flash already 404s for a key issued today — and a
+    # project that sits untouched between semesters should not stop working
+    # because a version number went stale.
+    #
+    # The "lite" tier is deliberate. This is a grounded lookup, not a
+    # reasoning problem: the answer is already in the facts and the model only
+    # has to find it and say it plainly. Lite measured roughly twice as fast
+    # on the same question and scored the same on refusing what it should not
+    # answer. The free tier also allows only 20 requests per day per model,
+    # so if one runs dry, changing this line to another model is the fix.
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-lite-latest").strip()
+    # Seconds. Kept short: a student waiting on a chat reply would rather have
+    # the ordinary decline quickly than the perfect answer late. The floor is
+    # not ours — the API rejects any deadline under 10 seconds with a 400, so
+    # a smaller value here would fail every request rather than time out.
+    LLM_TIMEOUT = max(10.0, float(os.getenv("LLM_TIMEOUT", "12")))
     # Escape hatch to switch the fallback off without deleting the key.
     LLM_ENABLED = os.getenv("LLM_ENABLED", "1") == "1"
+    # Print why the fallback declined instead of failing silently. Silence is
+    # right for students; it is unhelpful when something is misconfigured.
+    LLM_DEBUG = os.getenv("LLM_DEBUG", "0") == "1"
 
     # ---- Paths to the existing frontend ----
     TEMPLATE_DIR = BASE_DIR / "templates"

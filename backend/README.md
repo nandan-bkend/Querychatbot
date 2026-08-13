@@ -171,7 +171,7 @@ open https://aistudio.google.com/apikey
 GEMINI_API_KEY=your-key-here
 
 # 3. check it
-python -m chatbot.llm "is there a swimming pool"
+python -m chatbot.llm "who is the hod of the ai and ml department"
 ```
 
 Leave `GEMINI_API_KEY` blank and the feature is simply off. No key, no
@@ -183,13 +183,69 @@ only line to delete to remove the feature entirely.
 | Setting | Default | Meaning |
 |---|---|---|
 | `GEMINI_API_KEY` | *(blank)* | Blank switches the fallback off |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | Any model your key can reach |
-| `LLM_TIMEOUT` | `8` | Seconds before giving up and declining |
+| `GEMINI_MODEL` | `gemini-flash-lite-latest` | An alias, not a pinned version — see below |
+| `LLM_TIMEOUT` | `12` | Seconds before giving up and declining. The API rejects anything under 10 |
 | `LLM_ENABLED` | `1` | Set to `0` to disable without removing the key |
+| `LLM_DEBUG` | `0` | Set to `1` to log *why* a decline happened |
 
 Answers from this path are returned with `"source": "llm"` and logged in
 `chat_log` with `answered = 1` but a `NULL` `matched_question_id`, so the two
 kinds of answer stay distinguishable in the data.
+
+### Measured
+
+| Check | Result |
+|---|---|
+| Rejection suite (`evaluate.py`) with the fallback **on** | **10/10** — no out-of-scope question started being answered |
+| Recall and rejection with the fallback **off** | 33/33 and 10/10 — unchanged from before the feature |
+| Refusing facts absent from the database | 4/4 — wifi password, principal, swimming pool, canteen |
+| Answering facts present but with no stored question | AI&ML HOD, ISE HOD's email — read from the `faculty` table |
+| Repeat question | 0.000s, served from cache, no request spent |
+
+The last two are the point of the feature. *"Who is the HOD of the AI and ML
+department?"* has no row in `questions`, so TF-IDF and Naive Bayes decline it —
+but Dr. Manjunath H. R. is in the `faculty` table, so the fallback answers it,
+with his real email and extension. Meanwhile *"what is the wifi password"* is
+in neither, and gets refused rather than guessed.
+
+### Free-tier limits, and why they matter more than the cost
+
+The free tier allows **20 requests per day and 5 per minute, per model.**
+That is the real constraint on this feature — not money.
+
+It is less restrictive than it first sounds, because the fallback only runs
+for questions the classifier could not match. Every question in the demo
+script is answered by TF-IDF and Naive Bayes without touching the network.
+Repeats are free too: answers and refusals are cached in memory, so asking the
+same thing twice costs one request, not two.
+
+But it is a real limit, and worth knowing before a demonstration:
+
+- **Rehearsing burns the same quota as presenting.** Twenty unmatched
+  questions in the morning leaves none for the afternoon.
+- **The quota is per model.** If one runs dry, change `GEMINI_MODEL` in `.env`
+  to another — `gemini-flash-latest`, `gemini-3.5-flash`, `gemini-3.6-flash`
+  — and the allowance starts fresh. `python -m chatbot.llm` lists nothing, but
+  the Google AI Studio console shows what a key can reach.
+- **Running dry is not a failure.** A 429 is caught like any other error: the
+  student gets the ordinary polite decline, and the classifier keeps working
+  normally. Nothing visibly breaks.
+
+Set `LLM_DEBUG=1` to tell the two apart — a genuine "not covered by the facts"
+refusal and a "rate limited" decline look identical to the student, and
+identical in the log, without it.
+
+### Why the model is an alias, not a version
+
+`GEMINI_MODEL` defaults to `gemini-flash-lite-latest` rather than a numbered
+release. Google retires specific versions to new keys — `gemini-2.5-flash`
+already returns 404 for a key issued today — and a project that sits untouched
+between semesters should not stop working because a version number went stale.
+
+The *lite* tier is deliberate. This is a grounded lookup, not a reasoning
+problem: the answer is already in the facts and the model only has to find it
+and say it plainly. In testing, lite ran roughly twice as fast and scored the
+same on refusing what it should not answer.
 
 ---
 
