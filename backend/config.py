@@ -22,7 +22,11 @@ class Config:
 
     # ---- Flask ----
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-me")
-    DEBUG = os.getenv("FLASK_DEBUG", "1") == "1"
+    # Defaults to OFF. A deployment that forgets to set this gets the safe
+    # value rather than the dangerous one — Flask's debugger exposes an
+    # interactive Python console to whoever triggers an error, which on a
+    # public URL is remote code execution. Local work opts in through .env.
+    DEBUG = os.getenv("FLASK_DEBUG", "0") == "1"
     # Not 5000: macOS runs AirPlay Receiver on that port, which answers with
     # 403 and makes it look as though the application failed to start.
     PORT = int(os.getenv("PORT", "8000"))
@@ -76,6 +80,36 @@ class Config:
     # ---- Paths to the existing frontend ----
     TEMPLATE_DIR = BASE_DIR / "templates"
     STATIC_DIR = PROJECT_ROOT / "assets"
+
+    @classmethod
+    def production_problems(cls):
+        """
+        Settings that are harmless on a laptop and dangerous on a public URL.
+
+        Returned rather than raised so the caller decides what to do: the
+        deployment check refuses to start, while local development only
+        mentions them. The list is deliberately short — these are the two
+        that turn a student project into an open door.
+        """
+        problems = []
+        # Not just the code default: .env.example ships a placeholder, and a
+        # placeholder copied from an example file is the value most likely to
+        # end up on a real server. Anything short or self-describing counts.
+        key = cls.SECRET_KEY
+        if (len(key) < 32 or "change" in key.lower()
+                or key in ("dev-only-change-me", "secret", "changeme")):
+            problems.append(
+                "SECRET_KEY is a placeholder. Session cookies are signed with "
+                "it, so anyone who knows it can forge an admin session. "
+                "Generate one with:  python -c \"import secrets; "
+                "print(secrets.token_hex(32))\""
+            )
+        if cls.DEBUG:
+            problems.append(
+                "FLASK_DEBUG is on. The debugger offers an interactive Python "
+                "console to anyone who triggers an error. Set FLASK_DEBUG=0."
+            )
+        return problems
 
     @classmethod
     def db_params(cls, include_database=True):

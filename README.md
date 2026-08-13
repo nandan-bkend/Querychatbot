@@ -233,15 +233,32 @@ browser in the final build.
 
 ---
 
-## Publishing it as a web page (optional)
+## Putting it online
 
-Because the project is static, GitHub can host it for free:
+There are two different things you might mean by this, and they need
+different hosts.
+
+### The full application — a link people can actually test
+
+Flask, MySQL, the trained model and the admin panel, all working. This is the
+one to share and to put on a CV.
+
+**→ [`deploy/DEPLOY.md`](deploy/DEPLOY.md)** — a step-by-step guide for
+PythonAnywhere: free, never sleeps, MySQL included, and the Gemini fallback
+keeps working. About 30 minutes.
+
+### The static prototype — the frontend only
+
+The pages in this folder run with no backend at all, so GitHub can host them
+for free:
 
 **Settings → Pages → Source: Deploy from a branch → `main` / `root` → Save**
 
 After a minute the site is live at
-`https://<username>.github.io/<repository>/` and can be opened on any phone or
-laptop without cloning.
+`https://<username>.github.io/<repository>/`. Useful as a fallback if the
+laptop misbehaves on presentation day, but the answers come from the seeded
+browser data rather than the real Naive Bayes model — so it is not the version
+to hand to someone evaluating the project.
 
 ---
 

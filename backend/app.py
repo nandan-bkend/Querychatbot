@@ -38,6 +38,7 @@ from flask import (Flask, flash, jsonify, redirect, render_template, request,
 import repository as repo
 from auth import (admin_required, authenticate, current_user, login_user,
                   logout_user, student_required)
+from chatbot import llm
 from chatbot import predict
 from chatbot import train
 from config import COLLEGE, Config
@@ -58,6 +59,35 @@ app.config.from_object(Config)
 #  COLLEGE now lives in config.py, because the grounded fallback needs the
 #  same details and importing them from app.py would be circular.
 # ==========================================================================
+
+
+def ensure_model():
+    """
+    Train the model if it is not on disk yet.
+
+    The .joblib is gitignored — it is build output, not source — so a fresh
+    clone or a fresh deployment has no model at all, and the first student to
+    ask a question would meet a FileNotFoundError. Training takes about a
+    second, so building it during startup is cheaper than any of the
+    alternatives, and it makes deployment a git pull rather than a git pull
+    plus a remembered command.
+
+    Runs at import so it happens under a WSGI server too, not only when this
+    file is executed directly. A database that is not ready yet is not fatal
+    here: the error surfaces properly on the first question instead.
+    """
+    try:
+        predict.load_model()
+    except FileNotFoundError:
+        app.logger.info("no trained model found — training one now")
+        try:
+            train.retrain()
+            predict.reload_model()
+        except Exception as err:
+            app.logger.warning("could not train at startup: %s", err)
+
+
+ensure_model()
 
 
 @app.context_processor
@@ -408,6 +438,10 @@ if __name__ == "__main__":
               f"{len(model['categories'])} categories")
     except FileNotFoundError as err:
         raise SystemExit(f"\n{err}\n")
+
+    print(f"  fallback : {'on, ' + Config.GEMINI_MODEL if llm.available() else 'off'}")
+    for problem in Config.production_problems():
+        print(f"  note     : {problem.splitlines()[0]}")
 
     print(f"  serving  : http://127.0.0.1:{Config.PORT}\n")
     app.run(debug=Config.DEBUG, port=Config.PORT)

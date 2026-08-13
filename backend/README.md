@@ -314,3 +314,24 @@ prototype uses, so there is one copy of the CSS and images.
 For a college demonstration this is appropriate. Before anything resembling
 real use, `SECRET_KEY` must be changed, `FLASK_DEBUG` turned off, and the
 application run behind a proper WSGI server rather than the development one.
+
+---
+
+## Deploying it
+
+See **[`../deploy/DEPLOY.md`](../deploy/DEPLOY.md)** for a step-by-step
+PythonAnywhere guide. Three scripts exist for that purpose:
+
+| Script | Purpose |
+|---|---|
+| `init_db.py` | Creates the tables in whatever database `.env` points at. Use this instead of `mysql < schema.sql` on shared hosting, where you cannot `CREATE DATABASE` and the database is named `youruser$college_chatbot`. Safe to re-run. |
+| `restore_demo.py` | Reseeds and retrains. The deployed demo shows its own admin password so visitors can try the admin panel, so it needs to be repairable; run this daily as a scheduled task. |
+| `deploy/pythonanywhere_wsgi.py` | Template for the host's WSGI file. |
+
+The application also trains the model at startup if none is on disk, so a
+fresh clone or a fresh deployment does not need the training step remembered
+separately.
+
+Before exposing it publicly, set `FLASK_DEBUG=0` and a real `SECRET_KEY`.
+`Config.production_problems()` checks both and the startup banner prints
+whatever it finds.
