@@ -40,7 +40,7 @@ from auth import (admin_required, authenticate, current_user, login_user,
                   logout_user, student_required)
 from chatbot import predict
 from chatbot import train
-from config import Config
+from config import COLLEGE, Config
 from db import DatabaseError, healthcheck
 
 app = Flask(
@@ -54,18 +54,10 @@ app.config.from_object(Config)
 
 # ==========================================================================
 #  Shared template values
+#
+#  COLLEGE now lives in config.py, because the grounded fallback needs the
+#  same details and importing them from app.py would be circular.
 # ==========================================================================
-
-COLLEGE = {
-    "name": "SEA College of Engineering and Technology",
-    "short_name": "SEA",
-    "tagline": "Affiliated to VTU, Belagavi · Approved by AICTE, New Delhi",
-    "address": "Ayappa Nagar, K. R. Puram, Bengaluru – 560 049, Karnataka",
-    "phone": "+91 80 2321 4500",
-    "alt_phone": "+91 80 2321 4501",
-    "email": "info@seacet.edu.in",
-    "website": "www.seacet.edu.in",
-}
 
 
 @app.context_processor

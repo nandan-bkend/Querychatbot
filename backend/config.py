@@ -45,6 +45,18 @@ class Config:
     SEED_FILE = BASE_DIR / "data" / "seed_data.json"
     TRAINING_FILE = BASE_DIR / "data" / "training_data.csv"
 
+    # ---- Optional grounded fallback (Google AI Studio / Gemini) ----
+    # Used only when TF-IDF and Naive Bayes find no match. Leave the key blank
+    # and the application behaves exactly as it did before: the assistant
+    # declines politely instead. Nothing else in the project depends on it.
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+    # Seconds. Deliberately short: a student waiting on a chat reply would
+    # rather have the ordinary decline quickly than the perfect answer late.
+    LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "8"))
+    # Escape hatch to switch the fallback off without deleting the key.
+    LLM_ENABLED = os.getenv("LLM_ENABLED", "1") == "1"
+
     # ---- Paths to the existing frontend ----
     TEMPLATE_DIR = BASE_DIR / "templates"
     STATIC_DIR = PROJECT_ROOT / "assets"
@@ -60,3 +72,23 @@ class Config:
         if include_database:
             params["database"] = cls.DB_NAME
         return params
+
+
+# ==========================================================================
+#  College identity
+#
+#  Lives here rather than in app.py because two unrelated parts of the
+#  application need it: the page templates, and the grounded fallback, which
+#  has to tell the language model which institution it is speaking for.
+# ==========================================================================
+
+COLLEGE = {
+    "name": "SEA College of Engineering and Technology",
+    "short_name": "SEA",
+    "tagline": "Affiliated to VTU, Belagavi · Approved by AICTE, New Delhi",
+    "address": "Ayappa Nagar, K. R. Puram, Bengaluru – 560 049, Karnataka",
+    "phone": "+91 80 2321 4500",
+    "alt_phone": "+91 80 2321 4501",
+    "email": "info@seacet.edu.in",
+    "website": "www.seacet.edu.in",
+}

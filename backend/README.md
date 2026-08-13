@@ -131,6 +131,68 @@ classes", "boys **residential** block. The fix is always to add phrasings to
 
 ---
 
+## Optional: the grounded fallback
+
+The pipeline above refuses anything it cannot match, which is correct but
+narrow — a student asking something the question bank does not cover gets an
+apology. The grounded fallback widens that last step, without touching the
+classifier.
+
+**It runs only after TF-IDF and Naive Bayes have already failed.** If a stored
+question matches, no external call is made. The classifier is still what
+answers every question it can answer, and the fallback cannot override, re-rank
+or reword any answer it produces.
+
+### Why it cannot invent facts about the college
+
+The model is never asked what it knows. On each call it is handed the contents
+of the database — departments, active faculty, and every active question and
+answer, about 10,000 characters — and instructed to answer from that text
+alone. Anything not in there must come back as the literal token `NO_ANSWER`,
+which `llm.py` turns into a normal decline.
+
+So the worst it can do is rephrase or combine facts the administrator entered.
+It has no licence to produce a faculty name, phone number or fee that is not
+already in MySQL. Deactivate a question in the admin panel and it disappears
+from the fallback's facts at the same moment it disappears from the classifier.
+
+Three further guards, all in `llm.py`: replies over 700 characters are
+discarded (the longest stored answer is 378, so a model writing paragraphs has
+stopped following instructions and is no longer trustworthy on the grounding
+rule either); markdown is stripped; and every failure path returns `None`.
+
+### Turning it on
+
+```bash
+# 1. free key, no card required
+open https://aistudio.google.com/apikey
+
+# 2. paste it into backend/.env  (gitignored — it never reaches GitHub)
+GEMINI_API_KEY=your-key-here
+
+# 3. check it
+python -m chatbot.llm "is there a swimming pool"
+```
+
+Leave `GEMINI_API_KEY` blank and the feature is simply off. No key, no
+internet, a rate limit, a timeout or a malformed reply all produce exactly the
+behaviour the project had before this file existed — the polite decline. It is
+wired in at a single function, `_decline()` in `predict.py`, which is also the
+only line to delete to remove the feature entirely.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `GEMINI_API_KEY` | *(blank)* | Blank switches the fallback off |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Any model your key can reach |
+| `LLM_TIMEOUT` | `8` | Seconds before giving up and declining |
+| `LLM_ENABLED` | `1` | Set to `0` to disable without removing the key |
+
+Answers from this path are returned with `"source": "llm"` and logged in
+`chat_log` with `answered = 1` but a `NULL` `matched_question_id`, so the two
+kinds of answer stay distinguishable in the data.
+
+---
+
 ## Adding a question makes the chatbot answer it immediately
 
 When an administrator adds, edits or deletes a question, the model is retrained
@@ -157,7 +219,8 @@ backend/
 ├── chatbot/
 │   ├── preprocess.py    NLP: tokenise, stopwords, stemming
 │   ├── train.py         TF-IDF + Naive Bayes, saves the model
-│   └── predict.py       the answering path
+│   ├── predict.py       the answering path
+│   └── llm.py           optional grounded fallback, off without a key
 ├── data/
 │   ├── seed_data.json   exported from the frontend's mock-data.js
 │   └── training_data.csv 292 phrasings

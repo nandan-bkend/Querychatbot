@@ -21,6 +21,12 @@ Two safeguards keep it from confidently returning nonsense:
   * If nothing anywhere clears the similarity threshold the fallback reply is
     returned instead of the least-bad guess.
 
+One optional extra sits behind that last step. If a Gemini key is configured,
+llm.py gets a chance to answer from the college's own records before the
+apology is sent — see _decline() below and the long comment at the top of
+llm.py. It is off unless a key is present, it never runs when the classifier
+found a match, and it cannot change an answer the classifier produced.
+
     python -m chatbot.predict "what are the college timings"
 """
 
@@ -37,6 +43,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config import Config  # noqa: E402
 from db import execute, query  # noqa: E402
 
+from . import llm  # noqa: E402
 from .preprocess import content_stems, preprocess  # noqa: E402
 
 MODEL_FILE = Config.MODEL_DIR / "chatbot_model.joblib"
@@ -135,6 +142,10 @@ def reload_model():
     """Drop the cached model so the next question uses the newly trained one."""
     global _model
     _model = None
+    # The grounded fallback reads the same question bank, so it has to forget
+    # its copy at the same moment — otherwise a question deleted in the admin
+    # panel would still be answerable through the fallback.
+    llm.reset_facts()
 
 
 def small_talk(text):
@@ -168,6 +179,28 @@ def soft_decline():
     it says so pleasantly and points at what it does know.
     """
     return random.choice(FALLBACKS) + (OFFICE_NOTE if random.random() < 0.4 else "")
+
+
+def _decline(text, category=None, confidence=0.0, similarity=0.0,
+             source="fallback"):
+    """
+    The single place the assistant gives up — and therefore the single place
+    the optional grounded fallback is offered a turn.
+
+    Every path that used to return soft_decline() now comes through here, so
+    the fallback covers all of them and there is exactly one line of code to
+    delete if the feature is ever removed. If it is not configured, or has
+    nothing grounded to say, the polite apology is returned exactly as before.
+    """
+    grounded = llm.answer(text)
+    if grounded:
+        return {"answer": grounded, "category": category, "matched": None,
+                "confidence": confidence, "similarity": similarity,
+                "source": "llm"}
+
+    return {"answer": soft_decline(), "category": category, "matched": None,
+            "confidence": confidence, "similarity": similarity,
+            "source": source}
 
 
 def active_question_ids():
@@ -208,6 +241,38 @@ def _best_match(similarities, model, allowed_ids, restrict_to=None):
     return best_question, best_score
 
 
+def _log_turn(user_id, text, result, category=None):
+    """
+    Record the turn in chat_log so the admin can see what students actually
+    ask. Logging must never break an answer, so every failure is swallowed.
+
+    Called from each returning branch rather than once at the end, because the
+    early returns are exactly the questions worth seeing: they are the ones
+    the knowledge base did not cover.
+    """
+    try:
+        execute(
+            """INSERT INTO chat_log
+                 (user_id, question_text, matched_question_id,
+                  predicted_category, confidence, answered)
+               VALUES (%s, %s, %s, %s, %s, %s)""",
+            (
+                user_id,
+                text[:255],
+                result.get("matched_id"),
+                category,
+                round(result.get("confidence") or 0.0, 4),
+                # A grounded fallback reply is a real answer even though no
+                # stored question matched, so it counts as answered. The NULL
+                # matched_question_id is what tells the two apart in the log.
+                1 if (result.get("matched")
+                      or result.get("source") == "llm") else 0,
+            ),
+        )
+    except Exception:
+        pass
+
+
 def ask(text, user_id=None, log=True):
     """
     Answer a question. Returns a dict the chat route can send straight to the
@@ -232,8 +297,10 @@ def ask(text, user_id=None, log=True):
 
     document = preprocess(text)
     if not document:
-        return {"answer": soft_decline(), "category": None, "matched": None,
-                "confidence": 0.0, "similarity": 0.0, "source": "no_tokens"}
+        result = _decline(text, source="no_tokens")
+        if log:
+            _log_turn(user_id, text, result)
+        return result
 
     # ---- vocabulary gate ----
     # Question words ("what", "where", "how") appear in nearly every stored
@@ -245,8 +312,10 @@ def ask(text, user_id=None, log=True):
     subject = content_stems(text)
     known_subject = [t for t in subject if t in vocabulary]
     if not known_subject:
-        return {"answer": soft_decline(), "category": None, "matched": None,
-                "confidence": 0.0, "similarity": 0.0, "source": "out_of_scope"}
+        result = _decline(text, source="out_of_scope")
+        if log:
+            _log_turn(user_id, text, result)
+        return result
 
     # ---- coverage ----
     # Words the model has never seen simply disappear during vectorisation, so
@@ -280,15 +349,12 @@ def ask(text, user_id=None, log=True):
             matched, score, source = wider, wider_score, "global"
 
     if matched is None or score < Config.MIN_SIMILARITY:
-        result = {"answer": soft_decline(), "category": category,
-                  "matched": None, "confidence": confidence,
-                  "similarity": float(score), "source": "fallback"}
+        result = _decline(text, category, confidence, float(score), "fallback")
     else:
         rows = answer_for(matched["id"])
         if not rows:
-            result = {"answer": soft_decline(), "category": category,
-                      "matched": None, "confidence": confidence,
-                      "similarity": float(score), "source": "missing_row"}
+            result = _decline(text, category, confidence, float(score),
+                              "missing_row")
         else:
             row = rows[0]
             result = {
@@ -302,23 +368,7 @@ def ask(text, user_id=None, log=True):
             }
 
     if log:
-        try:
-            execute(
-                """INSERT INTO chat_log
-                     (user_id, question_text, matched_question_id,
-                      predicted_category, confidence, answered)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                (
-                    user_id,
-                    text[:255],
-                    result.get("matched_id"),
-                    category,
-                    round(confidence, 4),
-                    1 if result.get("matched") else 0,
-                ),
-            )
-        except Exception:
-            pass  # logging must never break an answer
+        _log_turn(user_id, text, result, category)
 
     result.pop("matched_id", None)
     return result

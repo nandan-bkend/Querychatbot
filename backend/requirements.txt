@@ -4,3 +4,8 @@ mysql-connector-python==26.7.0
 scikit-learn==1.9.0
 nltk==3.10.2
 python-dotenv==1.1.1
+
+# Optional — only needed for the grounded fallback (see README). The chatbot
+# runs without it: llm.py imports the SDK lazily, so a missing package simply
+# means the fallback stays off.
+google-genai==2.18.0
