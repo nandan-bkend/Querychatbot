@@ -382,7 +382,7 @@ window.UI = (function () {
         return false;
       }
       if (name === "phone" && !PHONE_RE.test(value)) {
-        setError(input, "Enter a valid contact number, e.g. +91 80 2321 4500");
+        setError(input, "Enter a valid contact number, e.g. 080 2973 0618");
         return false;
       }
       if (name === "min" && value.length < Number(arg)) {

@@ -311,7 +311,7 @@
   function softDecline() {
     const base = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
     return base + (Math.random() < 0.4
-      ? " If it's something urgent, the college office is on +91 80 2321 4500."
+      ? " If it's something urgent, the college office is on 080 2973 0618."
       : "");
   }
 

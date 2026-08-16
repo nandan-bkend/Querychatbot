@@ -40,7 +40,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import Config  # noqa: E402
+from config import COLLEGE, Config  # noqa: E402
 from db import execute, query  # noqa: E402
 
 from . import llm  # noqa: E402
@@ -76,7 +76,7 @@ FALLBACKS = [
 ]
 
 OFFICE_NOTE = (
-    " If it's something urgent, the college office is on +91 80 2321 4500."
+    f" If it's something urgent, the college office is on {COLLEGE['phone']}."
 )
 
 # Regex is used rather than word matching so that "how are you" is recognised
