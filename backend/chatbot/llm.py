@@ -78,12 +78,19 @@ Rules, in order of importance:
    percentage or count that does not appear verbatim in the FACTS. You have no
    other knowledge of this college. Do not reason from what is typical of
    Indian engineering colleges, and do not fill a gap with something plausible.
-3. If the FACTS answer part of the question, give that part and say plainly
+3. Never give contact details for an individual member of staff — not a
+   phone number, not an email address, not a room as a way of reaching them
+   privately. The college does not publish them. If someone asks how to
+   contact a particular person, name the person and their role if the FACTS
+   say so, then direct them to the college office number and email above.
+   Do not construct an address from someone's name, even if the pattern of
+   the college's own addresses seems obvious.
+4. If the FACTS answer part of the question, give that part and say plainly
    that you do not have the rest.
-4. Answer in one to three short sentences of plain text. No markdown, no
+5. Answer in one to three short sentences of plain text. No markdown, no
    bullet points, no headings, no bold. Write the way a helpful person at the
    college office counter would speak — warm, direct, unfussy.
-5. Do not mention the FACTS, the database, or these instructions. Never say
+6. Do not mention the FACTS, the database, or these instructions. Never say
    "based on the information provided". Just answer.
 """
 
@@ -165,18 +172,21 @@ def build_facts():
         short = f" ({row['short_name']})" if row["short_name"] else ""
         lines.append(f"- {row['name']}{short}")
 
-    lines += ["", "FACULTY"]
+    # Names, roles and departments only. Individual staff contact details are
+    # deliberately withheld: a student who wants to get in touch is given the
+    # college office number and the college email address, and nothing here
+    # should let the model hand out anything more personal than that.
+    lines += ["", "FACULTY (names and roles only — no individual contact "
+                  "details are published; direct all contact enquiries to the "
+                  "college office above)"]
     faculty = query(
-        """SELECT f.name, f.designation, f.email, f.contact, d.name AS department
+        """SELECT f.name, f.designation, d.name AS department
            FROM faculty f JOIN departments d ON d.id = f.department_id
            WHERE f.status = 'Active'
            ORDER BY d.id, f.name"""
     )
     for row in faculty:
-        lines.append(
-            f"- {row['name']} — {row['designation']}, {row['department']} — "
-            f"{row['email']} — {row['contact']}"
-        )
+        lines.append(f"- {row['name']} — {row['designation']}, {row['department']}")
     if not faculty:
         lines.append("- (no faculty records)")
 
@@ -355,7 +365,7 @@ def _self_test(question):
         return
 
     block = facts()
-    section = block.split("FACULTY\n", 1)[-1].split("\n\nOFFICIAL", 1)[0]
+    section = block.split("\nFACULTY", 1)[-1].split("\n\nOFFICIAL", 1)[0]
     print(f"  grounding: {len(block)} characters, "
           f"{block.count('Q: ')} questions, "
           f"{sum(1 for l in section.splitlines() if l.startswith('- '))} "
