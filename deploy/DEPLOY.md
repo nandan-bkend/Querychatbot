@@ -194,3 +194,42 @@ Then **Reload** on the Web tab. If the pull changed `schema.sql`, run
 | CSS missing, page unstyled | The static files mapping in step 6.4 is wrong, or the trailing slashes are missing. |
 | Fallback always declines | `LLM_DEBUG=1`, reload, check the error log. Most likely the free quota — 20 requests per day per model. |
 | Site was working, now 502 | Free web apps expire after three months. Press the renewal button on the Web tab. |
+
+---
+
+## Shortcut: run the setup script instead of steps 1–5
+
+Everything from cloning to the verification run is automated. In a
+PythonAnywhere **Bash console**:
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/nandan-bkend/Querychatbot/main/deploy/setup_pythonanywhere.sh)
+```
+
+It clones the code, builds the virtualenv, installs the dependencies, asks for
+your MySQL password and Gemini key (neither is echoed to the screen), writes
+`.env` with a freshly generated `SECRET_KEY` and debug off, creates the tables,
+loads the data, trains the model, and runs the evaluation. Then it prints the
+WSGI file and the scheduled-task command with your username already filled in.
+
+It is safe to run twice — it reuses an existing clone and virtualenv, and
+leaves a configured `.env` alone.
+
+You still do steps 6 and 7 by hand, because the web app configuration has no
+command-line equivalent.
+
+### Disk quota
+
+The installed packages come to about 340 MB against the free tier's 512 MB.
+That fits, but if `pip` fails with a quota error, the largest saving is to
+share the system's numpy, scipy and scikit-learn rather than install your own:
+
+```bash
+rm -rf ~/.virtualenvs/chatbot
+python3.11 -m venv --system-site-packages ~/.virtualenvs/chatbot
+~/.virtualenvs/chatbot/bin/pip install --no-cache-dir -r ~/Querychatbot/backend/requirements.txt
+```
+
+Check afterwards that `python evaluate.py` still reports 33/33 and 10/10 — a
+different scikit-learn version than the one the model was trained against can
+change the results.
