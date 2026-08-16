@@ -388,13 +388,18 @@
      Suggested question chips
      ====================================================================== */
 
+  /* Four, not six. Chips are a prompt rather than a menu — a short row reads
+     as "here is the kind of thing to ask", while a long one reads as "here is
+     everything I can do" and undersells a bank of 28 questions.
+
+     One from each of four categories, so the row still shows the breadth:
+     Departments, Timetable, Faculty, Contact Information. Kept in step with
+     the same list in the backend's student_chat route. */
   const SUGGESTIONS = [
     "Who is the HOD of the ISE department?",
     "What are the college timings?",
     "Who are the faculty members in ISE?",
-    "Where is the ISE department located?",
     "What are the contact details of the college?",
-    "What are the library timings?",
   ];
 
   function renderChips() {

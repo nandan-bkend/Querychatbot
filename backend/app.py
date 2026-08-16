@@ -200,13 +200,17 @@ def student_login():
 @app.route("/student/chat")
 @student_required
 def student_chat():
+    # Four, not six. Chips are a prompt, not a menu — a short row reads as
+    # "here is the kind of thing to ask" while a long one reads as "here is
+    # everything I can do", which undersells a bank of 28 questions.
+    #
+    # One from each of four different categories, so the row still shows the
+    # breadth: Departments, Timetable, Faculty, Contact Information.
     suggestions = [
         "Who is the HOD of the ISE department?",
         "What are the college timings?",
         "Who are the faculty members in ISE?",
-        "Where is the ISE department located?",
         "What are the contact details of the college?",
-        "What are the library timings?",
     ]
     return render_template(
         "student_chat.html",
