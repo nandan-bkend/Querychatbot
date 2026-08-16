@@ -319,14 +319,16 @@ application run behind a proper WSGI server rather than the development one.
 
 ## Deploying it
 
-See **[`../deploy/DEPLOY.md`](../deploy/DEPLOY.md)** for a step-by-step
-PythonAnywhere guide. Three scripts exist for that purpose:
+See **[`../deploy/DEPLOY.md`](../deploy/DEPLOY.md)** for the walkthrough —
+Render for the app, Aiven for MySQL, a free scheduler for the jobs Render's
+free tier cannot run. Supporting pieces:
 
 | Script | Purpose |
 |---|---|
 | `init_db.py` | Creates the tables in whatever database `.env` points at. Use this instead of `mysql < schema.sql` on shared hosting, where you cannot `CREATE DATABASE` and the database is named `youruser$college_chatbot`. Safe to re-run. |
-| `restore_demo.py` | Reseeds and retrains. The deployed demo shows its own admin password so visitors can try the admin panel, so it needs to be repairable; run this daily as a scheduled task. |
-| `deploy/pythonanywhere_wsgi.py` | Template for the host's WSGI file. |
+| `restore_demo.py` | Reseeds and retrains. The deployed demo shows its own admin password so visitors can try the admin panel, so it needs to be repairable. Runs in the calling process rather than spawning subprocesses — on a 512 MB instance a second copy of SciPy is enough to get the worker killed mid-restore. |
+| `render.yaml` | Deployment blueprint. Render reads it and configures the service itself, including generating `SECRET_KEY` and `TASK_TOKEN` rather than letting a placeholder reach production. |
+| `/healthz`, `/tasks/restore` | Two routes that exist because free hosting has no scheduler: one to ping the app awake, one for an external cron service to trigger the daily restore. `/tasks/restore` is token-protected and disabled when `TASK_TOKEN` is unset. |
 
 The application also trains the model at startup if none is on disk, so a
 fresh clone or a fresh deployment does not need the training step remembered

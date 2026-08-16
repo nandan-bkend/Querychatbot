@@ -243,9 +243,9 @@ different hosts.
 Flask, MySQL, the trained model and the admin panel, all working. This is the
 one to share and to put on a CV.
 
-**→ [`deploy/DEPLOY.md`](deploy/DEPLOY.md)** — a step-by-step guide for
-PythonAnywhere: free, never sleeps, MySQL included, and the Gemini fallback
-keeps working. About 30 minutes.
+**→ [`deploy/DEPLOY.md`](deploy/DEPLOY.md)** — a step-by-step guide using
+three free accounts: Render for the app, Aiven for MySQL, and a free scheduler
+to keep it awake. No credit card, about 40 minutes.
 
 ### The static prototype — the frontend only
 

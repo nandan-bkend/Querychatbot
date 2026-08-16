@@ -32,10 +32,13 @@ by a redirect. The chat route returns JSON so that asking a question does not
 reload the page.
 """
 
+import threading
+
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    session, url_for)
 
 import repository as repo
+import restore_demo
 from auth import (admin_required, authenticate, current_user, login_user,
                   logout_user, student_required)
 from chatbot import llm
@@ -130,6 +133,46 @@ def handle_db_error(error):
 @app.route("/")
 def home():
     return render_template("index.html")
+
+
+@app.route("/healthz")
+def healthz():
+    """
+    Cheap liveness check, and the target for the keep-warm ping.
+
+    Free hosting sleeps an idle app and takes about a minute to wake, which
+    to somebody opening the link looks like a broken site. A free scheduler
+    hitting this every ten minutes keeps it awake. Deliberately does no
+    database work: waking the process is the whole job, and a ping that fails
+    when MySQL hiccups would defeat the point.
+    """
+    return jsonify({"status": "ok"})
+
+
+@app.route("/tasks/restore")
+def tasks_restore():
+    """
+    Reseed the public demo. Protected by a token, because the alternative is
+    a URL that lets any passer-by wipe the database on a loop.
+
+    Exists because the free hosting tier has no scheduler. An external cron
+    service calls this once a day; on a paid tier you would run
+    restore_demo.py directly instead.
+
+    Returns straight away and does the work on a background thread: reseeding
+    and retraining takes longer than a cron service will wait, and a timeout
+    would leave it retrying a job that was already running.
+    """
+    token = Config.TASK_TOKEN
+    if not token:
+        return jsonify({"error": "TASK_TOKEN is not configured"}), 503
+    if request.args.get("token") != token:
+        return jsonify({"error": "bad token"}), 403
+
+    threading.Thread(target=restore_demo.restore,
+                     kwargs={"log": app.logger.info},
+                     daemon=True).start()
+    return jsonify({"status": "restore started"}), 202
 
 
 # ==========================================================================

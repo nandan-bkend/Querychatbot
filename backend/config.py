@@ -37,6 +37,12 @@ class Config:
     DB_USER = os.getenv("DB_USER", "root")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "")
     DB_NAME = os.getenv("DB_NAME", "college_chatbot")
+    # Managed MySQL providers require TLS; a local server usually has none
+    # configured. Point DB_SSL_CA at the provider's CA certificate to verify
+    # it properly, or leave it blank for an encrypted-but-unverified link,
+    # which is what most free tiers hand you.
+    DB_SSL_CA = os.getenv("DB_SSL_CA", "").strip()
+    DB_SSL = os.getenv("DB_SSL", "0") == "1" or bool(DB_SSL_CA)
 
     # ---- Chatbot ----
     # Below this Naive Bayes confidence the question is treated as unknown and
@@ -76,6 +82,13 @@ class Config:
     # Print why the fallback declined instead of failing silently. Silence is
     # right for students; it is unhelpful when something is misconfigured.
     LLM_DEBUG = os.getenv("LLM_DEBUG", "0") == "1"
+
+    # ---- Scheduled maintenance ----
+    # Secret for /tasks/restore, which an external cron service calls daily
+    # because free hosting has no scheduler of its own. Blank disables the
+    # route entirely, which is the right default: an unprotected version of
+    # it would let anyone wipe the demo database on a loop.
+    TASK_TOKEN = os.getenv("TASK_TOKEN", "").strip()
 
     # ---- Paths to the existing frontend ----
     TEMPLATE_DIR = BASE_DIR / "templates"
@@ -121,6 +134,17 @@ class Config:
         }
         if include_database:
             params["database"] = cls.DB_NAME
+
+        if cls.DB_SSL:
+            if cls.DB_SSL_CA:
+                params["ssl_ca"] = cls.DB_SSL_CA
+                params["ssl_verify_cert"] = True
+            else:
+                # Encrypted, but the server's certificate is not checked. A
+                # managed provider will refuse an unencrypted connection
+                # outright, so this is the difference between working and not;
+                # supply DB_SSL_CA when you have the certificate to hand.
+                params["ssl_disabled"] = False
         return params
 
 

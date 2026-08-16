@@ -1,0 +1,57 @@
+# render.yaml — deployment blueprint
+#
+# Render reads this when you connect the repository, so the service is
+# configured from the file rather than from a dozen fields in a web form.
+# Secrets are not in here; they are set once in the dashboard.
+#
+# See deploy/DEPLOY.md for the full walkthrough.
+
+services:
+  - type: web
+    name: college-chatbot
+    runtime: python
+    plan: free
+    rootDir: backend
+    region: singapore # closest to India of the free regions
+
+    buildCommand: pip install --no-cache-dir -r requirements.txt
+
+    # One worker, deliberately. The free instance has 512 MB and scikit-learn
+    # plus SciPy account for a large part of that once imported; a second
+    # worker would load its own copy and risk the instance being killed.
+    #
+    # The long timeout covers the first request after a deploy: the model is
+    # gitignored build output, so app.py trains one at startup, and on a
+    # 0.1-CPU instance that takes appreciably longer than the 30-second
+    # default allows.
+    startCommand: gunicorn --workers 1 --timeout 120 --bind 0.0.0.0:$PORT app:app
+
+    healthCheckPath: /healthz
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: SECRET_KEY
+        generateValue: true # Render generates one; never a placeholder
+      - key: TASK_TOKEN
+        generateValue: true # protects /tasks/restore
+      - key: DB_SSL
+        value: "1" # managed MySQL refuses unencrypted connections
+
+      # Set these by hand in the dashboard — they are secrets, or come from
+      # the database provider. Left without a value so Render prompts for
+      # them rather than deploying with something wrong.
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

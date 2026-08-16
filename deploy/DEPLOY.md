@@ -1,185 +1,125 @@
-# Deploying to PythonAnywhere
+# Deploying — a free public URL
 
-A public URL you can share, that stays awake, costs nothing, and keeps the
-Gemini fallback working. Budget about 30 minutes the first time.
+Three free accounts, no credit card, about 40 minutes. At the end you have a
+link anyone can open and test.
 
-Everything below assumes a **free** account. Nothing here needs a card.
+| Piece | Service | Why |
+|---|---|---|
+| The app | [Render](https://render.com) | Free web service, full internet access |
+| The database | [Aiven](https://aiven.io/free-mysql-database) | Free MySQL, always on, 1 GB |
+| Staying awake | [cron-job.org](https://cron-job.org) | Free scheduler, replaces the cron Render's free tier lacks |
+
+> **Why not PythonAnywhere?** Its free tier no longer includes MySQL, and it
+> restricts outbound traffic to whitelisted HTTP(S) sites — which rules out
+> connecting to a database hosted anywhere else, since MySQL is not HTTP. It
+> works on the $10/month Developer plan, but Railway does the same job for
+> about half that if you would rather pay than juggle three services.
+
+> **Why not Vercel?** The dependencies come to about 306 MB against a 250 MB
+> limit on serverless functions, and its filesystem is read-only — which would
+> break retrain-on-add, the best thing the admin panel does.
 
 ---
 
-## Why this host
+## 1. Database — Aiven
 
-| | |
-|---|---|
-| **Never sleeps** | The link works instantly when someone opens it. Free tiers elsewhere sleep after ~15 minutes idle and take about 50 seconds to wake, which reads as broken to anyone clicking a link on a CV. |
-| **MySQL included** | No second provider to sign up for. |
-| **Gemini reachable** | Free accounts can only reach whitelisted sites, and `.googleapis.com` is on that list — which covers `generativelanguage.googleapis.com`. |
-| **Built for this** | Flask plus MySQL is the case PythonAnywhere is designed around. |
+1. Sign up at [aiven.io](https://aiven.io/free-mysql-database) and create a
+   **free MySQL** service. Pick a region near you.
+2. Wait for it to say *Running* (a few minutes).
+3. From the service overview, note **Host**, **Port**, **User**, **Password**
+   and **Database name**. The port is usually not 3306.
 
-⚠️ **Free web apps expire after three months** unless you log in and press the
-renewal button on the Web tab. Put a recurring reminder in your calendar — a
-dead link on a CV is worse than no link.
+Aiven requires TLS. The blueprint already sets `DB_SSL=1`, so there is nothing
+to configure for that.
 
----
+## 2. App — Render
 
-## 1. Account and code
+1. Sign up at [render.com](https://render.com) with your GitHub account.
+2. **New → Blueprint**, choose the `Querychatbot` repository. Render reads
+   [`render.yaml`](../render.yaml) and configures the service itself — build
+   command, start command, health check and Python version all come from there.
+3. It will prompt for the values marked `sync: false`. Fill them from step 1:
 
-1. Sign up at [pythonanywhere.com](https://www.pythonanywhere.com/) (Beginner,
-   free).
-2. Open a **Bash console** from the Consoles tab and clone the project:
-
-```bash
-git clone https://github.com/nandan-bkend/Querychatbot.git
-cd Querychatbot/backend
-```
-
-## 2. Database
-
-1. **Databases** tab → set a MySQL password if prompted → create a database
-   named `college_chatbot`.
-2. PythonAnywhere prefixes it with your username, so the real name becomes
-   **`YOURUSERNAME$college_chatbot`**. Note the `$`. Also note the host shown
-   on that page: `YOURUSERNAME.mysql.pythonanywhere-services.com`.
-
-## 3. Virtualenv and dependencies
-
-Back in the Bash console:
-
-```bash
-mkvirtualenv chatbot --python=/usr/bin/python3.11
-pip install -r requirements.txt
-```
-
-`mkvirtualenv` both creates and activates it. Later consoles need
-`workon chatbot` first.
-
-## 4. Configuration
-
-Create `backend/.env`. Generate a real secret key rather than inventing one:
-
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-
-```bash
-cat > .env <<'EOF'
-SECRET_KEY=paste-the-generated-value-here
-FLASK_DEBUG=0
-
-DB_HOST=YOURUSERNAME.mysql.pythonanywhere-services.com
-DB_PORT=3306
-DB_USER=YOURUSERNAME
-DB_PASSWORD=your-mysql-password
-DB_NAME=YOURUSERNAME$college_chatbot
-
-MIN_CATEGORY_CONFIDENCE=0.20
-MIN_SIMILARITY=0.35
-
-GEMINI_API_KEY=your-key-if-you-want-the-fallback
-GEMINI_MODEL=gemini-flash-lite-latest
-LLM_TIMEOUT=12
-LLM_ENABLED=1
-LLM_DEBUG=0
-EOF
-```
-
-Two things that will bite otherwise:
-
-- **`FLASK_DEBUG=0` is not optional.** Flask's debugger hands an interactive
-  Python console to anyone who triggers an error. On a public URL that is
-  remote code execution. The application now defaults to off, but set it
-  explicitly so nobody turns it on later by accident.
-- **Quote the heredoc** (`<<'EOF'`, with the quotes) or the shell will try to
-  expand `$college_chatbot` and silently write an empty database name.
-
-## 5. Build the database contents
-
-```bash
-python init_db.py          # create the 8 tables
-python seed.py             # questions, faculty, demo accounts
-python seed_training.py    # the 292 phrasings
-python -m chatbot.train    # build the model
-python evaluate.py         # expect 33/33 and 10/10
-```
-
-Use `init_db.py`, **not** `mysql < schema.sql` — the schema file starts by
-creating a database called `college_chatbot`, which a free account has no
-permission to do and which is the wrong name here anyway. `init_db.py` runs
-the same schema against the database you already made.
-
-## 6. The web app
-
-1. **Web** tab → *Add a new web app* → **Manual configuration** (not the Flask
-   option — it writes a starter app over your own) → Python 3.11.
-2. **Virtualenv** — enter `chatbot`.
-3. **Code → WSGI configuration file** — click through, delete everything in it,
-   and paste the contents of [`pythonanywhere_wsgi.py`](pythonanywhere_wsgi.py),
-   changing `YOURUSERNAME`.
-4. **Static files** — optional but worth it, it takes the CSS and images off
-   the Python process:
-
-   | URL | Directory |
+   | Variable | Value |
    |---|---|
-   | `/assets/` | `/home/YOURUSERNAME/Querychatbot/assets/` |
+   | `DB_HOST` | Aiven host |
+   | `DB_PORT` | Aiven port |
+   | `DB_USER` | Aiven user (often `avnadmin`) |
+   | `DB_PASSWORD` | Aiven password |
+   | `DB_NAME` | Aiven database name (often `defaultdb`) |
+   | `GEMINI_API_KEY` | your key, or leave blank to run without the fallback |
 
-5. Press the green **Reload** button.
+   `SECRET_KEY` and `TASK_TOKEN` are generated by Render — you never type them,
+   so they cannot end up as a placeholder.
 
-Open `https://YOURUSERNAME.pythonanywhere.com` — the home page should appear.
+4. Deploy. The first build takes several minutes; SciPy is a large download.
 
-## 7. Keep the demo repairable
+## 3. Fill the database
 
-The login pages show the demo credentials on purpose: visitors are meant to try
-the admin panel, and adding a question then watching the chatbot answer it is
-the best thing the project does. The cost is that a visitor can also delete
-everything and leave the site looking broken.
-
-**Tasks** tab → add a daily task, any time you like:
-
-```
-/home/YOURUSERNAME/.virtualenvs/chatbot/bin/python /home/YOURUSERNAME/Querychatbot/backend/restore_demo.py --quiet
-```
-
-That reseeds the questions, faculty and phrasings and retrains the model, so
-any damage lasts hours rather than forever. `--quiet` keeps the task log empty
-unless something actually failed.
-
-You can also run it by hand at any time:
+The app starts with empty tables. Open **Shell** on your Render service (left
+sidebar) and run:
 
 ```bash
-workon chatbot && cd ~/Querychatbot/backend && python restore_demo.py
+python init_db.py         # create the 8 tables
+python seed.py            # questions, faculty, demo accounts
+python seed_training.py   # the 292 phrasings
+python evaluate.py        # expect 33/33 and 10/10
 ```
 
-## 8. Check it properly
+You do not need to train the model by hand — `app.py` builds one at startup
+whenever it finds none, which is what happens on every Render deploy, since the
+filesystem is wiped each time.
 
-Open the site and confirm, in this order:
+Open your URL. The home page should appear.
+
+## 4. Keep it awake
+
+Render's free tier sleeps after 15 minutes idle and takes about a minute to
+wake. To someone opening a link on your CV, that is indistinguishable from a
+broken site. A scheduled ping prevents it.
+
+At [cron-job.org](https://cron-job.org), create a job:
+
+- **URL** — `https://YOUR-APP.onrender.com/healthz`
+- **Every 10 minutes**
+
+`/healthz` deliberately touches no database, so the ping stays cheap and does
+not fail when the database is briefly unavailable.
+
+## 5. Keep the demo repairable
+
+The login pages show the demo credentials on purpose — visitors are meant to
+try the admin panel, and adding a question then watching the chatbot answer it
+is the most convincing thing the project does. The cost is that a visitor can
+also delete everything.
+
+Copy `TASK_TOKEN` from Render's Environment tab, then add a second cron-job.org
+job:
+
+- **URL** — `https://YOUR-APP.onrender.com/tasks/restore?token=YOUR_TASK_TOKEN`
+- **Once a day**, any time
+
+That reseeds the data and retrains the model. It returns immediately and works
+in the background, so the scheduler will not time out waiting.
+
+## 6. Check it properly
 
 1. **Home page** loads with the college logo.
-2. **Student login** with `student@seacet.edu.in` / `student123`.
-3. **Ask a stored question** — *"what are the college timings"* — answers
-   instantly, with no network call.
-4. **Ask something unmatched** — *"who is the hod of the ai and ml
-   department"*. Answered means the Gemini fallback is working. A polite
-   decline means it is not, and everything else still works.
-5. **Admin login** with `admin@seacet.edu.in` / `admin123`, add a question,
-   then ask the chatbot that question straight away. It should answer.
-
-If step 4 declines and you wanted the fallback, set `LLM_DEBUG=1` in `.env`,
-reload, ask again, and read the **Error log** on the Web tab. It will say
-whether the cause was a rate limit, a bad key, or a genuine "not covered by
-the facts".
+2. **Student login** — `student@seacet.edu.in` / `student123`.
+3. **A stored question** — *"what are the college timings"* — answers instantly,
+   no network call involved.
+4. **An unmatched question** — *"who is the hod of the ai and ml department"*.
+   Answered means the Gemini fallback is working; a polite decline means it is
+   not, and everything else still works.
+5. **Admin login** — `admin@seacet.edu.in` / `admin123`, add a question, then
+   ask the chatbot that question straight away.
 
 ---
 
-## Updating the deployed site later
+## Updating it later
 
-```bash
-workon chatbot && cd ~/Querychatbot
-git pull
-pip install -r backend/requirements.txt     # only if requirements changed
-```
-
-Then **Reload** on the Web tab. If the pull changed `schema.sql`, run
-`python backend/init_db.py` too.
+Push to `main`. Render redeploys automatically. The database is separate and
+survives, so only run `init_db.py` again if `schema.sql` changed.
 
 ---
 
@@ -187,49 +127,23 @@ Then **Reload** on the Web tab. If the pull changed `schema.sql`, run
 
 | Symptom | Cause |
 |---|---|
-| "Something went wrong" page | Read the **Error log** on the Web tab — it names the exception and line. |
-| `Unknown database` | `DB_NAME` needs the `YOURUSERNAME$` prefix, and the heredoc must be quoted or `$college_chatbot` gets eaten. |
-| `Access denied for user` | The MySQL password is the one from the Databases tab, not your account password. |
-| Chatbot answers nothing at all | The model was not built. Run `python -m chatbot.train`. |
-| CSS missing, page unstyled | The static files mapping in step 6.4 is wrong, or the trailing slashes are missing. |
-| Fallback always declines | `LLM_DEBUG=1`, reload, check the error log. Most likely the free quota — 20 requests per day per model. |
-| Site was working, now 502 | Free web apps expire after three months. Press the renewal button on the Web tab. |
+| Build fails on `pip install` | Check the Render log for which package. The free tier has enough disk; `--no-cache-dir` is already set. |
+| `Can't connect to MySQL server` | Aiven host or port wrong — the port is usually not 3306. |
+| `Access denied` | Wrong password, or `DB_NAME` is not the database Aiven actually created (often `defaultdb`, not `college_chatbot`). |
+| SSL / TLS errors | `DB_SSL=1` must be set. It is in `render.yaml`, so check it survived into the Environment tab. |
+| Site works, chatbot answers nothing | The tables are empty — run step 3. |
+| First visit takes a minute | The keep-warm ping is not running. Check step 4. |
+| `/tasks/restore` returns 503 | `TASK_TOKEN` is not set on the service. |
+| `/tasks/restore` returns 403 | The token in the URL does not match the one in the Environment tab. |
+| Fallback always declines | Set `LLM_DEBUG=1`, redeploy, and read the Render log. Most likely the free Gemini quota — 20 requests per day per model. |
+| Worker killed, out of memory | The free instance has 512 MB. Keep `--workers 1`; a second worker loads its own copy of SciPy. |
 
 ---
 
-## Shortcut: run the setup script instead of steps 1–5
+## If you would rather pay ~$5/month
 
-Everything from cloning to the verification run is automated. In a
-PythonAnywhere **Bash console**:
-
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/nandan-bkend/Querychatbot/main/deploy/setup_pythonanywhere.sh)
-```
-
-It clones the code, builds the virtualenv, installs the dependencies, asks for
-your MySQL password and Gemini key (neither is echoed to the screen), writes
-`.env` with a freshly generated `SECRET_KEY` and debug off, creates the tables,
-loads the data, trains the model, and runs the evaluation. Then it prints the
-WSGI file and the scheduled-task command with your username already filled in.
-
-It is safe to run twice — it reuses an existing clone and virtualenv, and
-leaves a configured `.env` alone.
-
-You still do steps 6 and 7 by hand, because the web app configuration has no
-command-line equivalent.
-
-### Disk quota
-
-The installed packages come to about 340 MB against the free tier's 512 MB.
-That fits, but if `pip` fails with a quota error, the largest saving is to
-share the system's numpy, scipy and scikit-learn rather than install your own:
-
-```bash
-rm -rf ~/.virtualenvs/chatbot
-python3.11 -m venv --system-site-packages ~/.virtualenvs/chatbot
-~/.virtualenvs/chatbot/bin/pip install --no-cache-dir -r ~/Querychatbot/backend/requirements.txt
-```
-
-Check afterwards that `python evaluate.py` still reports 33/33 and 10/10 — a
-different scikit-learn version than the one the model was trained against can
-change the results.
+[Railway](https://railway.app) hosts the app and MySQL together, never sleeps,
+and needs neither the keep-warm ping nor the restore URL — you would run
+`restore_demo.py` on a real schedule instead. Same code; the only changes are
+setting the same environment variables and using
+`gunicorn --workers 1 --bind 0.0.0.0:$PORT app:app` as the start command.
