@@ -195,7 +195,7 @@ def seed_users(data, department_ids):
                 account["role"],
                 account["name"],
                 account["email"],
-                generate_password_hash(account["password"]),
+                generate_password_hash(account["password"], method='pbkdf2:sha256'),
                 account["usn"],
                 department_ids.get(account["department"]),
                 account["semester"],
