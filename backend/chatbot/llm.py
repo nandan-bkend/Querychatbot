@@ -274,7 +274,25 @@ def _generate(question, drop_thinking=False):
         contents=f"{facts()}\n\nSTUDENT'S QUESTION\n{question}",
         config=types.GenerateContentConfig(**config),
     )
-    return response.text
+    return _text_of(response)
+
+
+def _text_of(response):
+    """
+    Pull the reply text out of the response.
+
+    Deliberately not response.text. On some versions of the SDK that accessor
+    prints a warning to the console whenever the reply carries a non-text part
+    — a thinking signature, for instance — which is noise in a terminal during
+    a demonstration and worse in a server log, for a reply that is perfectly
+    usable. Reading the text parts directly gives the same string, quietly,
+    and works the same way on every version.
+    """
+    try:
+        parts = response.candidates[0].content.parts or []
+    except (AttributeError, IndexError, TypeError):
+        return ""
+    return "".join(p.text for p in parts if getattr(p, "text", None))
 
 
 def answer(question):
